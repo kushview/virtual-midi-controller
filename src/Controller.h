@@ -21,7 +21,7 @@ public:
     Settings& getSettings();
     void saveSettings();
 
-    //
+    //=========================================================================
     void addMidiMessage (const MidiMessage msg);
     MidiKeyboardState& getMidiKeyboardState();
 

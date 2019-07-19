@@ -5,14 +5,24 @@
 
 namespace vmc {
 
-class VirtualKeyboard : public MidiKeyboardComponent
+class VirtualKeyboard : public Component
 {
 public:
     VirtualKeyboard (MidiKeyboardState& state)
-        : MidiKeyboardComponent (state, MidiKeyboardComponent::horizontalKeyboard)
-    { }
+    {
+        keyboard.reset (new MidiKeyboardComponent (state, MidiKeyboardComponent::horizontalKeyboard));
+        addAndMakeVisible (keyboard.get());
+    }
 
     ~VirtualKeyboard() { }
+
+    void resized() override
+    {
+        keyboard->setBounds (getLocalBounds());
+    }
+
+private:
+    std::unique_ptr<MidiKeyboardComponent> keyboard;
 };
 
 }

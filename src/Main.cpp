@@ -16,10 +16,7 @@ public:
 
     void initialise (const String& commandLine) override
     {
-        controller.reset (new Controller());
-        
         setupGlobals();
-
         look.setColour (Slider::backgroundColourId, kv::LookAndFeel_KV1::widgetBackgroundColor.darker());
         LookAndFeel::setDefaultLookAndFeel (&look);
         mainWindow.reset (new MainWindow (getApplicationName(), *controller));
@@ -102,12 +99,13 @@ public:
     };
 
 private:
-    std::unique_ptr<MainWindow> mainWindow;
     kv::LookAndFeel_KV1 look;
+    std::unique_ptr<MainWindow> mainWindow;
     std::unique_ptr<Controller> controller;
 
     void setupGlobals()
     {
+        controller.reset (new Controller());
         auto& formats = controller->getAudioFormats();
         formats.registerBasicFormats();
         controller->initializePlugins();
