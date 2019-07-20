@@ -90,10 +90,7 @@ def build_mac (bld):
         source      = bld.path.ant_glob ("src/**/*.cpp") +
                       bld.path.ant_glob ("jucer/JuceLibraryCode/*.mm"),
         includes    = [ 'jucer/JuceLibraryCode', 'src', \
-                        os.path.expanduser('~') + '/SDKs/VST_SDK/VST3_SDK', \
-                        os.path.expanduser('~') + '/SDKs/VST_SDK/VST2_SDK', \
-                        os.path.expanduser('~') + '/SDKs/JUCE/modules',\
-                        os.path.expanduser('~') + '/SDKs/KV/modules' ],
+                        'libs/JUCE/modules', 'libs/kv/modules' ],
         target      = 'Applications/MIDI Controller',
         name        = 'VMC',
         env         = appEnv,
