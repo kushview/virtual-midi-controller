@@ -27,21 +27,21 @@
                        osxCompatibility="10.8 SDK" osxArchitecture="64BitIntel"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_audio_basics" path="~/SDKs/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_devices" path="~/SDKs/JUCE/modules"/>
-        <MODULEPATH id="juce_core" path="~/SDKs/JUCE/modules"/>
-        <MODULEPATH id="juce_cryptography" path="~/SDKs/JUCE/modules"/>
-        <MODULEPATH id="juce_data_structures" path="~/SDKs/JUCE/modules"/>
-        <MODULEPATH id="juce_events" path="~/SDKs/JUCE/modules"/>
-        <MODULEPATH id="juce_graphics" path="~/SDKs/JUCE/modules"/>
-        <MODULEPATH id="juce_gui_basics" path="~/SDKs/JUCE/modules"/>
-        <MODULEPATH id="juce_gui_extra" path="~/SDKs/JUCE/modules"/>
-        <MODULEPATH id="kv_core" path="~/SDKs/KV/modules"/>
-        <MODULEPATH id="kv_gui" path="~/SDKs/KV/modules"/>
-        <MODULEPATH id="kv_models" path="~/SDKs/KV/modules"/>
-        <MODULEPATH id="juce_audio_utils" path="../../../../SDKs/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_processors" path="../../../../SDKs/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_formats" path="../../../../SDKs/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics"/>
+        <MODULEPATH id="juce_audio_devices"/>
+        <MODULEPATH id="juce_core"/>
+        <MODULEPATH id="juce_data_structures"/>
+        <MODULEPATH id="juce_events"/>
+        <MODULEPATH id="juce_graphics"/>
+        <MODULEPATH id="juce_gui_basics"/>
+        <MODULEPATH id="kv_core"/>
+        <MODULEPATH id="kv_gui"/>
+        <MODULEPATH id="kv_models"/>
+        <MODULEPATH id="juce_cryptography"/>
+        <MODULEPATH id="juce_audio_utils"/>
+        <MODULEPATH id="juce_audio_processors"/>
+        <MODULEPATH id="juce_audio_formats"/>
+        <MODULEPATH id="juce_gui_extra"/>
       </MODULEPATHS>
     </XCODE_MAC>
   </EXPORTFORMATS>
