@@ -13,14 +13,16 @@ struct Controller::Impl : public MidiKeyboardStateListener
     std::unique_ptr<MidiOutput> midiOut;
     MidiKeyboardState keyboardState;
 
-    void handleNoteOn (MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity) override
+    void handleNoteOn (MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override
     {
-        midiOut->sendMessageNow (MidiMessage::noteOn (midiChannel, midiNoteNumber, velocity));
+        if (midiOut)
+            midiOut->sendMessageNow (MidiMessage::noteOn (midiChannel, midiNoteNumber, velocity));
     }
 
-    void handleNoteOff (MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity) override
+    void handleNoteOff (MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override
     {
-        midiOut->sendMessageNow (MidiMessage::noteOff (midiChannel, midiNoteNumber, velocity));
+        if (midiOut)
+            midiOut->sendMessageNow (MidiMessage::noteOff (midiChannel, midiNoteNumber, velocity));
     }
 };
 
@@ -28,15 +30,18 @@ Controller::Controller()
 {
     impl.reset (new Impl());
     impl->devices.setOwned (new AudioDeviceManager ());
+   #if JUCE_MAC
     impl->midiOut.reset (MidiOutput::createNewDevice ("VMC"));
     impl->midiOut->startBackgroundThread();
+   #endif
     impl->keyboardState.addListener (impl.get());
 }
 
 Controller::~Controller()
 {
     impl->keyboardState.removeListener (impl.get());
-    impl->midiOut->stopBackgroundThread();
+    if (impl->midiOut != nullptr)
+        impl->midiOut->stopBackgroundThread();
     impl.reset();
 }
 
@@ -109,14 +114,14 @@ AudioDeviceManager& Controller::getDeviceManager()            { return *impl->de
 
 void Controller::addMidiMessage (const MidiMessage msg)
 {
-    impl->midiOut->sendMessageNow (msg);
+    if (impl->midiOut != nullptr)
+        impl->midiOut->sendMessageNow (msg);
 }
 
-void Controller::audioDeviceIOCallback (const float** inputChannelData,
-                                      int numInputChannels, float** outputChannelData,
-                                      int numOutputChannels, int numSamples) {}
-void Controller::audioDeviceAboutToStart (AudioIODevice* device) {}
+void Controller::audioDeviceIOCallback (const float**, int, float**,
+                                        int, int) {}
+void Controller::audioDeviceAboutToStart (AudioIODevice*) {}
 void Controller::audioDeviceStopped() { }
-void Controller::audioDeviceError (const String& errorMessage) { }
+void Controller::audioDeviceError (const String& errorMessage) { ignoreUnused (errorMessage); }
 
 }

@@ -17,6 +17,7 @@ public:
 
     void initialise (const String& commandLine) override
     {
+        ignoreUnused (commandLine);
         setupGlobals();
         LookAndFeel::setDefaultLookAndFeel (&look);
         mainWindow.reset (new MainWindow (getApplicationName(), *controller));
@@ -37,6 +38,7 @@ public:
 
     void anotherInstanceStarted (const String& commandLine) override
     {
+        ignoreUnused (commandLine);
     }
 
     class MainWindow : public DocumentWindow
