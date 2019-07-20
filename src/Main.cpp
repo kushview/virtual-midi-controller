@@ -1,6 +1,7 @@
 
 #include "JuceHeader.h"
 #include "MainComponent.h"
+#include "LookAndFeel.h"
 #include "Controller.h"
 
 namespace vmc {
@@ -17,7 +18,6 @@ public:
     void initialise (const String& commandLine) override
     {
         setupGlobals();
-        look.setColour (Slider::backgroundColourId, kv::LookAndFeel_KV1::widgetBackgroundColor.darker());
         LookAndFeel::setDefaultLookAndFeel (&look);
         mainWindow.reset (new MainWindow (getApplicationName(), *controller));
     }
@@ -99,7 +99,7 @@ public:
     };
 
 private:
-    kv::LookAndFeel_KV1 look;
+    vmc::LookAndFeel look;
     std::unique_ptr<MainWindow> mainWindow;
     std::unique_ptr<Controller> controller;
 
