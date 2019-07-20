@@ -13,11 +13,6 @@ public:
     ~Controller();
 
     //=========================================================================
-    void initializeAudioDevice();
-    void initializePlugins();
-    void shutdown();
-
-    //=========================================================================
     Settings& getSettings();
     void saveSettings();
 
@@ -31,8 +26,6 @@ public:
     
     //=========================================================================
     AudioDeviceManager& getDeviceManager();
-    AudioPluginFormatManager& getPluginManager();
-    AudioFormatManager& getAudioFormats();
 
     //=========================================================================
     void audioDeviceIOCallback (const float** inputChannelData,
@@ -52,6 +45,11 @@ public:
 
 private:
     struct Impl; std::unique_ptr<Impl> impl;
+
+    //=========================================================================
+    friend class Application;
+    void initializeAudioDevice();
+    void shutdown();
 };
 
 }

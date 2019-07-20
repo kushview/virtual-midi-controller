@@ -9,10 +9,7 @@ struct Controller::Impl : public MidiKeyboardStateListener
     ~Impl() { }
 
     Settings settings;
-    KnownPluginList knownPlugins;
     OptionalScopedPointer<AudioDeviceManager> devices;
-    OptionalScopedPointer<AudioFormatManager> formats;
-    OptionalScopedPointer<AudioPluginFormatManager> plugins;
     std::unique_ptr<MidiOutput> midiOut;
     MidiKeyboardState keyboardState;
 
@@ -31,8 +28,6 @@ Controller::Controller()
 {
     impl.reset (new Impl());
     impl->devices.setOwned (new AudioDeviceManager ());
-    impl->formats.setOwned (new AudioFormatManager ());
-    impl->plugins.setOwned (new AudioPluginFormatManager());
     impl->midiOut.reset (MidiOutput::createNewDevice ("VMC"));
     impl->midiOut->startBackgroundThread();
     impl->keyboardState.addListener (impl.get());
@@ -41,9 +36,7 @@ Controller::Controller()
 Controller::~Controller()
 {
     impl->keyboardState.removeListener (impl.get());
-
     impl->midiOut->stopBackgroundThread();
-    impl->formats->clearFormats();
     impl.reset();
 }
 
@@ -71,22 +64,6 @@ void Controller::initializeAudioDevice()
     devices.addMidiInputCallback (String(), this);
 }
 
-void Controller::initializePlugins()
-{
-    auto& settings = impl->settings;
-    auto& plugins = getPluginManager();
-    plugins.addDefaultFormats();
-    if (auto* const props = settings.getUserSettings())
-    {
-        const auto file = props->getFile().getParentDirectory().getChildFile("plugins.xml");
-        if (auto* xml = XmlDocument::parse (file))
-        {
-            impl->knownPlugins.recreateFromXml (*xml);
-            deleteAndZero (xml);
-        }
-    }
-}
-
 void Controller::shutdown()
 {
     auto& devices = getDeviceManager();
@@ -99,8 +76,6 @@ void Controller::saveSettings()
 {
     auto& settings = impl->settings;
     auto& devices  = getDeviceManager();
-    auto& plugins  = getPluginManager();
-    auto& formats  = getAudioFormats();
 
     if (auto* const props = settings.getUserSettings())
     {
@@ -108,13 +83,6 @@ void Controller::saveSettings()
         {
             props->setValue ("devices", devicesXml);
             deleteAndZero (devicesXml);
-        }
-
-        if (auto* knownPlugins = impl->knownPlugins.createXml())
-        {
-            const auto file = props->getFile().getParentDirectory().getChildFile("plugins.xml");
-            knownPlugins->writeToFile (file, String());
-            deleteAndZero (knownPlugins);
         }
     }
 }
@@ -138,8 +106,6 @@ File Controller::getSamplesPath()
 MidiKeyboardState& Controller::getMidiKeyboardState()         { return impl->keyboardState; }
 Settings& Controller::getSettings()                           { return impl->settings; }
 AudioDeviceManager& Controller::getDeviceManager()            { return *impl->devices; }
-AudioFormatManager& Controller::getAudioFormats()             { return *impl->formats; }
-AudioPluginFormatManager& Controller::getPluginManager()      { return *impl->plugins; }
 
 void Controller::addMidiMessage (const MidiMessage msg)
 {

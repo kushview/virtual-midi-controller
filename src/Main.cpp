@@ -105,10 +105,8 @@ private:
 
     void setupGlobals()
     {
+        
         controller.reset (new Controller());
-        auto& formats = controller->getAudioFormats();
-        formats.registerBasicFormats();
-        controller->initializePlugins();
         controller->initializeAudioDevice();
     }
 
