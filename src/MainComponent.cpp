@@ -47,12 +47,23 @@ public:
         addAndMakeVisible (keyboard);
         
         addAndMakeVisible (program);
-        for (int i = 0; i < 128; ++i)
-            program.addItem (String (i), 1 + i);
-        program.onChange = [this]()
+        program.setRange (1.0, 128.0, 1.0);
+        program.setSliderStyle (Slider::IncDecButtons);
+        program.setValue (1.0, dontSendNotification);
+        program.onValueChange = [this]()
         {
-            int value = jlimit (0, 127, program.getSelectedItemIndex());
-            owner.controller.addMidiMessage (MidiMessage::programChange (1, value));
+            int value = jlimit (0, 127, roundToInt (program.getValue()));
+            owner.controller.addMidiMessage (MidiMessage::programChange (midiChannel, value));
+        };
+
+        addAndMakeVisible (channel);
+        channel.setRange (1.0, 16.0, 1.0);
+        channel.setSliderStyle (Slider::IncDecButtons);
+        channel.setValue (1.0, dontSendNotification);
+        channel.onValueChange = [this]()
+        {
+            midiChannel = roundToInt (channel.getValue());
+            keyboard.setMidiChannel (midiChannel);
         };
 
         setSize (440, 340);
@@ -60,7 +71,11 @@ public:
 
     ~Content()
     {
-
+        slider1.onValueChange = nullptr;
+        slider2.onValueChange = nullptr;
+        slider3.onValueChange = nullptr;
+        program.onValueChange = nullptr;
+        channel.onValueChange = nullptr;
     }
 
     void paint (Graphics& g) override
@@ -71,10 +86,13 @@ public:
     void resized() override
     {
         auto r = getLocalBounds();
+        auto r2 = r.removeFromTop (18);
+        channel.setBounds (r2.removeFromLeft (64));
+        program.setBounds (r2.removeFromLeft (64));
+
         slider1.setBounds (r.removeFromLeft (18));
         slider2.setBounds (r.removeFromLeft (18));
         slider3.setBounds (r.removeFromRight (18));
-        program.setBounds (r.removeFromBottom (18));
         keyboard.setBounds (r);
     }
 
@@ -82,7 +100,9 @@ private:
     MainComponent& owner;
     VirtualKeyboard keyboard;
     Slider slider1, slider2, slider3;
-    ComboBox program;
+    Slider program, channel;
+
+    int midiChannel = 1;
 };
 
 MainComponent::MainComponent (Controller& vc)

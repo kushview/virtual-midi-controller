@@ -16,6 +16,12 @@ public:
 
     ~VirtualKeyboard() { }
 
+    /** Set the MIDI channel to use */
+    void setMidiChannel (int channel) { keyboard->setMidiChannel (channel); }
+
+    /** Get the current MIDI channel */
+    int getMidiChannel() const noexcept { return keyboard->getMidiChannel(); }
+
     void resized() override
     {
         keyboard->setBounds (getLocalBounds());
