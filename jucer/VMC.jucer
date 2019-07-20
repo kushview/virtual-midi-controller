@@ -1,21 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="Qtdnfm" name="Virtual Midi Controller" projectType="guiapp"
+<JUCERPROJECT id="Qtdnfm" name="Virtual MIDI Controller" projectType="guiapp"
               jucerVersion="5.4.3" version="1.0.0" companyName="Kushview" companyCopyright="Copyright (c) 2019 Kushview, LLC"
               companyWebsite="https://kushview.net" companyEmail="support@kushview.net"
               bundleIdentifier="net.kushview.VMC">
-  <MAINGROUP id="B7YhNQ" name="Virtual Midi Controller">
+  <MAINGROUP id="B7YhNQ" name="Virtual MIDI Controller">
     <GROUP id="{CF3D9FD5-623B-929D-8445-AAA1B8D9FA7C}" name="src">
+      <FILE id="BBYIIA" name="Controller.cpp" compile="1" resource="0" file="../src/Controller.cpp"/>
+      <FILE id="iy2syM" name="Controller.h" compile="0" resource="0" file="../src/Controller.h"/>
       <FILE id="kHOade" name="Main.cpp" compile="1" resource="0" file="../src/Main.cpp"/>
       <FILE id="yKqcEQ" name="MainComponent.cpp" compile="1" resource="0"
             file="../src/MainComponent.cpp"/>
       <FILE id="gandlE" name="MainComponent.h" compile="0" resource="0" file="../src/MainComponent.h"/>
+      <FILE id="n71L8G" name="Settings.h" compile="0" resource="0" file="../src/Settings.h"/>
+      <FILE id="gqPq53" name="VirtualKeyboard.h" compile="0" resource="0"
+            file="../src/VirtualKeyboard.h"/>
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX">
+    <XCODE_MAC targetFolder="Builds/MacOSX" microphonePermissionNeeded="0" cameraPermissionNeeded="0"
+               iosInAppPurchases="0" iosPushNotifications="0">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="MIDI Controller"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="MIDI Controller" osxArchitecture="64BitIntel"
+                       osxCompatibility="10.8 SDK"/>
         <CONFIGURATION isDebug="0" name="Release" targetName="MIDI Controller" codeSigningIdentity="9511F5241B78B0D38961CD756873066A5F0ED225"
                        osxCompatibility="10.8 SDK" osxArchitecture="64BitIntel"/>
       </CONFIGURATIONS>

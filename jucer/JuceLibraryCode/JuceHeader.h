@@ -40,7 +40,7 @@
 #if ! JUCE_DONT_DECLARE_PROJECTINFO
 namespace ProjectInfo
 {
-    const char* const  projectName    = "Virtual Midi Controller";
+    const char* const  projectName    = "Virtual MIDI Controller";
     const char* const  companyName    = "Kushview";
     const char* const  versionString  = "1.0.0";
     const int          versionNumber  = 0x10000;
