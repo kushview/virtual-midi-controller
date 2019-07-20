@@ -105,3 +105,9 @@ def build_mac (bld):
     
 def build (bld):
     build_mac (bld)
+
+def deploy (ctx):
+    call (["tools/macdeploy/appbundle.py",
+           "-dmg", "MIDI Controller", 
+           "-fancy", "tools/macdeploy/fancy.plist",
+           "build/Applications/MIDI Controller.app"])
