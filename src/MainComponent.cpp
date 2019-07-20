@@ -47,26 +47,32 @@ public:
         addAndMakeVisible (keyboard);
         
         addAndMakeVisible (program);
+        program.setTooltip ("MIDI Program");
         program.setRange (1.0, 128.0, 1.0);
         program.setSliderStyle (Slider::IncDecButtons);
         program.setValue (1.0, dontSendNotification);
         program.onValueChange = [this]()
         {
-            int value = jlimit (0, 127, roundToInt (program.getValue()));
+            int value = jlimit (1, 128, roundToInt (program.getValue())) - 1;
+            owner.controller.getSettings().set (Settings::lastMidiProgram, value);
             owner.controller.addMidiMessage (MidiMessage::programChange (midiChannel, value));
         };
 
         addAndMakeVisible (channel);
+        channel.setTooltip ("MIDI Channel");
         channel.setRange (1.0, 16.0, 1.0);
         channel.setSliderStyle (Slider::IncDecButtons);
         channel.setValue (1.0, dontSendNotification);
         channel.onValueChange = [this]()
         {
             midiChannel = roundToInt (channel.getValue());
+            owner.controller.getSettings().set (Settings::lastMidiChannel, midiChannel);
             keyboard.setMidiChannel (midiChannel);
         };
 
         setSize (440, 340);
+
+        updateWithSettings();
     }
 
     ~Content()
@@ -76,6 +82,15 @@ public:
         slider3.onValueChange = nullptr;
         program.onValueChange = nullptr;
         channel.onValueChange = nullptr;
+    }
+
+    void updateWithSettings()
+    {
+        auto& settings = owner.controller.getSettings();
+
+        midiChannel = settings.getInt (Settings::lastMidiChannel, 1);
+        channel.setValue ((double) midiChannel, dontSendNotification);
+        program.setValue (1.0 + (double) settings.getInt (Settings::lastMidiProgram, 0), dontSendNotification);
     }
 
     void paint (Graphics& g) override
@@ -92,7 +107,7 @@ public:
 
         slider1.setBounds (r.removeFromLeft (18));
         slider2.setBounds (r.removeFromLeft (18));
-        slider3.setBounds (r.removeFromRight (18));
+        // slider3.setBounds (r.removeFromRight (18));
         keyboard.setBounds (r);
     }
 

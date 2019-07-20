@@ -7,6 +7,9 @@ namespace vmc {
 class Settings :  public ApplicationProperties
 {
 public:
+    static const char* lastMidiChannel;
+    static const char* lastMidiProgram;
+
     Settings()
     {
         PropertiesFile::Options opts;
@@ -30,6 +33,19 @@ public:
     }
 
     ~Settings() { }
+
+    void set (const String& key, const var& value)
+    {
+        if (auto* const props = getUserSettings())
+            props->setValue (key, value);
+    }
+
+    int getInt (const String& key, int defaultValue = 0)
+    {
+        if (auto* props = getUserSettings())
+            return props->getIntValue (key, defaultValue);
+        return defaultValue;
+    }
 };
 
 }
