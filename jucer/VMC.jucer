@@ -27,23 +27,47 @@
                        osxCompatibility="10.8 SDK" osxArchitecture="64BitIntel"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_audio_basics"/>
-        <MODULEPATH id="juce_audio_devices"/>
-        <MODULEPATH id="juce_core"/>
-        <MODULEPATH id="juce_data_structures"/>
-        <MODULEPATH id="juce_events"/>
-        <MODULEPATH id="juce_graphics"/>
-        <MODULEPATH id="juce_gui_basics"/>
-        <MODULEPATH id="kv_core"/>
-        <MODULEPATH id="kv_gui"/>
+        <MODULEPATH id="juce_audio_basics" path="../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../libs/JUCE/modules"/>
+        <MODULEPATH id="kv_core" path="../libs/kv/modules"/>
+        <MODULEPATH id="kv_gui" path="../libs/kv/modules"/>
+        <MODULEPATH id="kv_models" path="../libs/kv/modules"/>
+        <MODULEPATH id="juce_cryptography" path="../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../libs/JUCE/modules"/>
+      </MODULEPATHS>
+    </XCODE_MAC>
+    <VS2017 targetFolder="Builds/VisualStudio2017">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="MIDI Controller" winArchitecture="x64"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="MIDI Controller" useRuntimeLibDLL="0"
+                       winArchitecture="x64"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
         <MODULEPATH id="kv_models"/>
+        <MODULEPATH id="kv_gui"/>
+        <MODULEPATH id="kv_core"/>
+        <MODULEPATH id="juce_gui_extra"/>
+        <MODULEPATH id="juce_gui_basics"/>
+        <MODULEPATH id="juce_graphics"/>
+        <MODULEPATH id="juce_events"/>
+        <MODULEPATH id="juce_data_structures"/>
         <MODULEPATH id="juce_cryptography"/>
+        <MODULEPATH id="juce_core"/>
         <MODULEPATH id="juce_audio_utils"/>
         <MODULEPATH id="juce_audio_processors"/>
         <MODULEPATH id="juce_audio_formats"/>
-        <MODULEPATH id="juce_gui_extra"/>
+        <MODULEPATH id="juce_audio_devices"/>
+        <MODULEPATH id="juce_audio_basics"/>
       </MODULEPATHS>
-    </XCODE_MAC>
+    </VS2017>
   </EXPORTFORMATS>
   <MODULES>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
