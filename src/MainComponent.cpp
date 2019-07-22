@@ -70,9 +70,21 @@ public:
             keyboard.setMidiChannel (midiChannel);
         };
 
+        addAndMakeVisible (output);
+        output.onChange = [this]()
+        {
+            auto& devices = owner.controller.getDeviceManager();
+
+            if (output.getSelectedId() == 1)
+                devices.setDefaultMidiOutput (String());
+            else
+                devices.setDefaultMidiOutput (output.getText());
+        };
+
         setSize (440, 340);
 
         updateWithSettings();
+        updateMidiOutputs();
     }
 
     ~Content()
@@ -111,11 +123,41 @@ public:
         keyboard.setBounds (r);
     }
 
+    void updateMidiOutputs()
+    {
+        output.clear (dontSendNotification);
+       
+        output.addItem ("None", 1);
+        output.addSeparator();
+
+        int index = 0;
+        for (const auto& name : MidiOutput::getDevices())
+            output.addItem (name, 1000 + index);
+
+        const String name = owner.controller.getDeviceManager().getDefaultMidiOutputName();
+        if (name.isEmpty())
+        {
+            output.setSelectedId (1, dontSendNotification);
+        }
+        else
+        {
+            for (int i = output.getNumItems(); --i >= 0;)
+            {
+                if (output.getItemText (i) == name)
+                {
+                    output.setSelectedItemIndex (i, dontSendNotification);
+                    break;
+                }
+            }
+        }
+    }
+
 private:
     MainComponent& owner;
     VirtualKeyboard keyboard;
     Slider slider1, slider2, slider3;
     Slider program, channel;
+    ComboBox output;
 
     int midiChannel = 1;
 };
