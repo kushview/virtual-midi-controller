@@ -83,8 +83,8 @@ public:
 
         setSize (440, 340);
 
-        updateWithSettings();
         updateMidiOutputs();
+        updateWithSettings();
     }
 
     ~Content()
@@ -103,36 +103,6 @@ public:
         midiChannel = settings.getInt (Settings::lastMidiChannel, 1);
         channel.setValue ((double) midiChannel, dontSendNotification);
         program.setValue (1.0 + (double) settings.getInt (Settings::lastMidiProgram, 0), dontSendNotification);
-    }
-
-    void paint (Graphics& g) override
-    {
-        g.fillAll (kv::LookAndFeel_KV1::widgetBackgroundColor.darker());
-    }
-
-    void resized() override
-    {
-        auto r = getLocalBounds();
-        auto r2 = r.removeFromTop (18);
-        channel.setBounds (r2.removeFromLeft (64));
-        program.setBounds (r2.removeFromLeft (64));
-
-        slider1.setBounds (r.removeFromLeft (18));
-        slider2.setBounds (r.removeFromLeft (18));
-        // slider3.setBounds (r.removeFromRight (18));
-        keyboard.setBounds (r);
-    }
-
-    void updateMidiOutputs()
-    {
-        output.clear (dontSendNotification);
-       
-        output.addItem ("None", 1);
-        output.addSeparator();
-
-        int index = 0;
-        for (const auto& name : MidiOutput::getDevices())
-            output.addItem (name, 1000 + index);
 
         const String name = owner.controller.getDeviceManager().getDefaultMidiOutputName();
         if (name.isEmpty())
@@ -150,6 +120,37 @@ public:
                 }
             }
         }
+    }
+
+    void paint (Graphics& g) override
+    {
+        g.fillAll (kv::LookAndFeel_KV1::widgetBackgroundColor.darker());
+    }
+
+    void resized() override
+    {
+        auto r = getLocalBounds();
+        auto r2 = r.removeFromTop (18);
+        channel.setBounds (r2.removeFromLeft (64));
+        program.setBounds (r2.removeFromLeft (64));
+        output.setBounds (r2.removeFromRight (120));
+
+        slider1.setBounds (r.removeFromLeft (18));
+        slider2.setBounds (r.removeFromLeft (18));
+        // slider3.setBounds (r.removeFromRight (18));
+        keyboard.setBounds (r);
+    }
+
+    void updateMidiOutputs()
+    {
+        output.clear (dontSendNotification);
+       
+        output.addItem ("None", 1);
+        output.addSeparator();
+
+        int index = 0;
+        for (const auto& name : MidiOutput::getDevices())
+            output.addItem (name, 1000 + index);
     }
 
 private:
