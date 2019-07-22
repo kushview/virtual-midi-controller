@@ -94,6 +94,7 @@ public:
         slider3.onValueChange = nullptr;
         program.onValueChange = nullptr;
         channel.onValueChange = nullptr;
+        output.onChange = nullptr;
     }
 
     void updateWithSettings()
