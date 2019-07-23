@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 #
+# Copied from Bitcoin, which was copied from Qt - MRF
+# 
 # Copyright (C) 2011  Patrick "p2k" Schneider <me@p2k-network.org>
 #
 # This program is free software: you can redistribute it and/or modify

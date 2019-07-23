@@ -1,12 +1,29 @@
 #!/usr/bin/env python
 
+# This file is part of Virtual MIDI Controller
+# Copyright (c) 2019  Kushview, LLC.  All rights reserved.
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
 from subprocess import call, Popen, PIPE
 import os, sys
 
 sys.path.append (os.getcwd() + "/tools/waf")
 import cross, element, juce
 
-VERSION='1.0.0'
+VERSION='0.1.0'
 
 def options (opt):
     opt.load ("compiler_c compiler_cxx cross juce")
@@ -103,8 +120,9 @@ def build_mac (bld):
 def build (bld):
     build_mac (bld)
 
-def deploy (ctx):
+def deploymac (ctx):
     call (["tools/macdeploy/appbundle.py",
-           "-dmg", "MIDI Controller", 
+           "-dmg", "vmc-osx-%s" % VERSION,
+           "-volname", "VMC",
            "-fancy", "tools/macdeploy/fancy.plist",
            "build/Applications/MIDI Controller.app"])

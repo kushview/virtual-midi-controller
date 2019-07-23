@@ -11,8 +11,8 @@
                 "/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7",
                 "${workspaceRoot}/jucer/JuceLibraryCode",
                 "${workspaceRoot}/src",
-                "~/SDKs/KV/modules",
-                "~/SDKs/JUCE/modules"
+                "${workspaceRoot}/libs/JUCE/modules",
+                "${workspaceRoot}/libs/kv/modules"
             ],
             "defines": [ ],
             "forcedInclude": [ "${workspaceRoot}/.vscode/vscode.h" ],
@@ -26,8 +26,8 @@
                     "/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7",
                     "${workspaceRoot}/jucer/JuceLibraryCode",
                     "${workspaceRoot}/src",
-                    "~/SDKs/KV/modules",
-                    "~/SDKs/JUCE/modules"
+                    "${workspaceRoot}/libs/JUCE/modules",
+                    "${workspaceRoot}/libs/kv/modules"
                 ],
                 "limitSymbolsToIncludedHeaders": false,
                 "databaseFilename": ""
