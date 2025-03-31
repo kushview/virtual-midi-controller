@@ -19,7 +19,8 @@
 
 #pragma once
 
-#include "JuceHeader.h"
+#include "juce.hpp"
+#include <juce_audio_utils/juce_audio_utils.h>
 
 namespace vmc {
 

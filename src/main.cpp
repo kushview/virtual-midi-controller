@@ -17,10 +17,12 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "JuceHeader.h"
-#include "MainComponent.h"
-#include "LookAndFeel.h"
-#include "Controller.h"
+#include "juce.hpp"
+#include <juce_events/juce_events.h>
+
+#include "maincomponent.hpp"
+#include "lookandfeel.hpp"
+#include "controller.hpp"
 
 #ifndef VMC_WIDTH
  #define VMC_WIDTH   800
@@ -37,8 +39,8 @@ class Application  : public JUCEApplication
 public:
     Application() { }
 
-    const String getApplicationName() override       { return ProjectInfo::projectName; }
-    const String getApplicationVersion() override    { return ProjectInfo::versionString; }
+    const String getApplicationName() override       { return "Virtual MIDI Controller"; }
+    const String getApplicationVersion() override    { return "1.0.0"; }
     bool moreThanOneInstanceAllowed() override       { return false; }
 
     void initialise (const String& commandLine) override

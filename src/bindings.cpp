@@ -17,11 +17,14 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "Settings.h"
+#include "juce.hpp"
+#include "bindings.hpp"
+#include "sol/sol.hpp"
 
 namespace vmc {
 
-const char* Settings::lastMidiChannel       = "lastMidiChannel";
-const char* Settings::lastMidiProgram       = "lastMidiProgram";
+void registerBindings (sol::state& lua)
+{
+}
 
 }
