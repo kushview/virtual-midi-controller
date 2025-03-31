@@ -17,9 +17,9 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "MainComponent.h"
-#include "VirtualKeyboard.h"
-#include "Controller.h"
+#include "maincomponent.hpp"
+#include "virtualkeyboard.hpp"
+#include "controller.hpp"
 
 namespace vmc {
 
