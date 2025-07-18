@@ -1,3 +1,8 @@
+/*
+    This file is part of Virtual MIDI Controller
+    Copyright (c) 2019  Kushview, LLC.  All rights reserved.
+*/
+
 #pragma once
 
 #include <juce_core/juce_core.h>
