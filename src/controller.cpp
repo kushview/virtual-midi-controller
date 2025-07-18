@@ -93,14 +93,14 @@ namespace vmc
         }
 
         devices.addAudioCallback(this);
-        devices.addMidiInputCallback(String(), this);
+        devices.addMidiInputDeviceCallback(String(), this);
     }
 
     void Controller::shutdown()
     {
         auto &devices = getDeviceManager();
         devices.removeAudioCallback(this);
-        devices.removeMidiInputCallback(String(), this);
+        devices.removeMidiInputDeviceCallback(String(), this);
         devices.closeAudioDevice();
     }
 
@@ -153,10 +153,11 @@ namespace vmc
                                                       int numSamples,
                                                       const AudioIODeviceCallbackContext &context)
     {
+        juce::ignoreUnused(inputChannelData, numInputChannels, outputChannelData, numOutputChannels, numSamples, context);
     }
 
     void Controller::audioDeviceAboutToStart(AudioIODevice *) {}
     void Controller::audioDeviceStopped() {}
-    void Controller::audioDeviceError(const String &errorMessage) { ignoreUnused(errorMessage); }
+    void Controller::audioDeviceError(const String &errorMessage) { juce::ignoreUnused(errorMessage); }
 
 }
