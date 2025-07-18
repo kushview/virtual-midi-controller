@@ -86,7 +86,7 @@ public:
         channel.setValue (1.0, dontSendNotification);
         channel.onValueChange = [this]()
         {
-            midiChannel = roundToInt (channel.getValue());
+            midiChannel = juce::roundToInt (channel.getValue());
             owner.controller.getSettings().set (Settings::lastMidiChannel, midiChannel);
             keyboard.setMidiChannel (midiChannel);
         };
@@ -97,9 +97,11 @@ public:
             auto& devices = owner.controller.getDeviceManager();
 
             if (output.getSelectedId() == 1)
-                devices.setDefaultMidiOutput (String());
-            else
-                devices.setDefaultMidiOutput (output.getText());
+                devices.setDefaultMidiOutputDevice (String());
+            else {
+                const auto info = _devices [output.getSelectedId() - 1000];
+                devices.setDefaultMidiOutputDevice (info.identifier);
+            }
         };
 
         setSize (440, 340);
@@ -126,16 +128,16 @@ public:
         channel.setValue ((double) midiChannel, dontSendNotification);
         program.setValue (1.0 + (double) settings.getInt (Settings::lastMidiProgram, 0), dontSendNotification);
 
-        const String name = owner.controller.getDeviceManager().getDefaultMidiOutputName();
-        if (name.isEmpty())
+        const String ID = owner.controller.getDeviceManager().getDefaultMidiOutputIdentifier();
+        if (ID.isEmpty())
         {
-            output.setSelectedId (1, dontSendNotification);
+            output.setSelectedItemIndex (0, dontSendNotification);
         }
         else
         {
             for (int i = output.getNumItems(); --i >= 0;)
             {
-                if (output.getItemText (i) == name)
+                if (output.getItemText (i) == ID)
                 {
                     output.setSelectedItemIndex (i, dontSendNotification);
                     break;
@@ -146,38 +148,36 @@ public:
 
     void paint (Graphics& g) override
     {
-       #if HAVE_KV
-        g.fillAll (kv::LookAndFeel_KV1::widgetBackgroundColor.darker());
-       #else
-        g.fillAll (Colours::black);
-       #endif
+        g.fillAll (Colours::darkgrey);
     }
 
     void resized() override
     {
-        auto r = getLocalBounds();
-        auto r2 = r.removeFromTop (18);
-        channel.setBounds (r2.removeFromLeft (64));
-        program.setBounds (r2.removeFromLeft (64));
-        output.setBounds (r2.removeFromRight (120));
+        auto r = getLocalBounds().reduced(4);
+        auto r2 = r.removeFromTop (22);
+        channel.setBounds (r2.removeFromLeft (80));
+        program.setBounds (r2.removeFromLeft (80));
+        output.setBounds (r2.removeFromRight (140));
 
         r = r.removeFromBottom (180);
-        slider1.setBounds (r.removeFromLeft (18));
-        slider2.setBounds (r.removeFromLeft (18));
+        slider1.setBounds (r.removeFromLeft (30));
+        slider2.setBounds (r.removeFromLeft (30));
         // slider3.setBounds (r.removeFromRight (18));
         keyboard.setBounds (r);
     }
 
     void updateMidiOutputs()
     {
+        _devices.clear();
+        _devices = MidiOutput::getAvailableDevices();
+
         output.clear (dontSendNotification);
-       
         output.addItem ("None", 1);
         output.addSeparator();
 
         int index = 0;
-        for (const auto& name : MidiOutput::getDevices())
-            output.addItem (name, 1000 + index);
+        for (const auto& info : _devices)
+            output.addItem (info.name, 1000 + index);
     }
 
 private:
@@ -186,6 +186,8 @@ private:
     Slider slider1, slider2, slider3;
     Slider program, channel;
     ComboBox output;
+
+    juce::Array<juce::MidiDeviceInfo> _devices;
 
     int midiChannel = 1;
 };

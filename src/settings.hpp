@@ -43,9 +43,9 @@ public:
        #endif
         
        #if JUCE_LINUX
-        opts.folderName          = ".config/virtual-midi-controller";
+        opts.folderName          = ".config/Kushview/VirtualMidiController";
        #else
-        opts.folderName          = "VirtualMidiController";
+        opts.folderName          = "Kushview/VirtualMidiController";
        #endif
 
         setStorageParameters (opts);
