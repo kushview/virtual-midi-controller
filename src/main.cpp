@@ -35,11 +35,13 @@ namespace vmc
             setupGlobals();
             LookAndFeel::setDefaultLookAndFeel(&look);
             mainWindow.reset(new MainWindow(getApplicationName(), *controller));
+            tooltipWindow.reset(new TooltipWindow (mainWindow.get()));
         }
 
         void shutdown() override
         {
             shutdownGui();
+            tooltipWindow = nullptr; // Clean up the tooltip window
             controller->saveSettings();
             controller->shutdown();
             controller.reset();
@@ -121,6 +123,7 @@ namespace vmc
         vmc::LookAndFeel look;
         std::unique_ptr<MainWindow> mainWindow;
         std::unique_ptr<Controller> controller;
+        std::unique_ptr<TooltipWindow> tooltipWindow; // Add TooltipWindow instance
 
         void setupGlobals()
         {

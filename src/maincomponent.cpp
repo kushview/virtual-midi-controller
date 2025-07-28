@@ -8,6 +8,12 @@
 #include "controller.hpp"
 
 namespace vmc {
+namespace detail {
+    inline static void styleIncDecSlider (juce::Slider& s, bool readOnly = false) {
+        s.setSliderStyle (Slider::IncDecButtons);
+        s.setTextBoxStyle (Slider::TextBoxLeft, readOnly, 40, 24);
+    }
+}
 
 class MainComponent::Content : public Component
 {
@@ -51,21 +57,22 @@ public:
         addAndMakeVisible (keyboard);
        
         addAndMakeVisible (program);
+        detail::styleIncDecSlider (program);
         program.setTooltip ("MIDI Program");
         program.setRange (1.0, 128.0, 1.0);
-        program.setSliderStyle (Slider::IncDecButtons);
         program.setValue (1.0, dontSendNotification);
+        
         program.onValueChange = [this]()
         {
-            int value = jlimit (1, 128, roundToInt (program.getValue())) - 1;
+            int value = jlimit (1, 128, juce::roundToInt (program.getValue())) - 1;
             owner.controller.getSettings().set (Settings::lastMidiProgram, value);
             owner.controller.addMidiMessage (MidiMessage::programChange (midiChannel, value));
         };
 
         addAndMakeVisible (channel);
+        detail::styleIncDecSlider (channel);
         channel.setTooltip ("MIDI Channel");
         channel.setRange (1.0, 16.0, 1.0);
-        channel.setSliderStyle (Slider::IncDecButtons);
         channel.setValue (1.0, dontSendNotification);
         channel.onValueChange = [this]()
         {
@@ -75,6 +82,7 @@ public:
         };
 
         addAndMakeVisible (output);
+        output.setTooltip ("MIDI output device");
         output.onChange = [this]()
         {
             auto& devices = owner.controller.getDeviceManager();
@@ -146,8 +154,8 @@ public:
     {
         auto r = getLocalBounds().reduced(4);
         auto r2 = r.removeFromTop (22);
-        channel.setBounds (r2.removeFromLeft (80));
-        program.setBounds (r2.removeFromLeft (80));
+        channel.setBounds (r2.removeFromLeft (90));
+        program.setBounds (r2.removeFromLeft (90));
         output.setBounds (r2.removeFromRight (140));
 
         auto r3 = r.removeFromBottom (180);
