@@ -5,25 +5,22 @@
 
 #pragma once
 
-#include "juce.hpp"
+#include <juce_gui_basics/juce_gui_basics.h>
 
 namespace vmc {
 
-#if HAVE_KV
-class LookAndFeel : public kv::LookAndFeel_KV1
-{
-public:
-    LookAndFeel()
-    {
-        setColour (Slider::backgroundColourId, kv::LookAndFeel_KV1::widgetBackgroundColor.darker());
-    }
-};
-#else
 class LookAndFeel : public juce::LookAndFeel_V4
 {
 public:
     LookAndFeel() = default;
+
+    void drawLinearSlider (juce::Graphics& g, int x, int y, int width, int height,
+                           float sliderPos, float minSliderPos, float maxSliderPos,
+                           const juce::Slider::SliderStyle style, juce::Slider& slider) override;
+
+    void drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height,
+                           float sliderPosProportional, float rotaryStartAngle, float rotaryEndAngle,
+                           juce::Slider& slider) override;
 };
-#endif
 
 }
