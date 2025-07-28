@@ -49,10 +49,7 @@ public:
         };
 
         addAndMakeVisible (keyboard);
-        auto& mkc = keyboard.getMidiKeyboardComponent();
-        mkc.setKeyWidth (48);
-        mkc.setScrollButtonWidth (48);
-
+       
         addAndMakeVisible (program);
         program.setTooltip ("MIDI Program");
         program.setRange (1.0, 128.0, 1.0);
@@ -89,6 +86,14 @@ public:
                 devices.setDefaultMidiOutputDevice (info.identifier);
             }
         };
+
+        for (int i = 0; i < 8; ++i) {
+            auto dial = _dials.add (new juce::Slider());
+            dial->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+            dial->setRange (0.0, 127.0, 1.0);
+            dial->setTextBoxStyle (juce::Slider::NoTextBox, true, 10, 10);
+            addAndMakeVisible (dial);
+        }
 
         setSize (440, 340);
 
@@ -145,11 +150,16 @@ public:
         program.setBounds (r2.removeFromLeft (80));
         output.setBounds (r2.removeFromRight (140));
 
-        r = r.removeFromBottom (180);
-        slider1.setBounds (r.removeFromLeft (30));
-        slider2.setBounds (r.removeFromLeft (30));
-        // slider3.setBounds (r.removeFromRight (18));
-        keyboard.setBounds (r);
+        auto r3 = r.removeFromBottom (180);
+        slider1.setBounds (r3.removeFromLeft (30));
+        slider2.setBounds (r3.removeFromLeft (30));
+        r3.removeFromLeft (4);
+        keyboard.setBounds (r3);
+
+        int sw = r.getWidth() / _dials.size();
+        for (auto* dial : _dials) {
+            dial->setBounds (r.removeFromLeft (sw));
+        }
     }
 
     void updateMidiOutputs()
@@ -173,6 +183,7 @@ private:
     Slider program, channel;
     ComboBox output;
 
+    juce::OwnedArray<juce::Slider> _dials;
     juce::Array<juce::MidiDeviceInfo> _devices;
 
     int midiChannel = 1;

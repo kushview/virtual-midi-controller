@@ -17,6 +17,8 @@ public:
     {
         keyboard.reset (new MidiKeyboardComponent (state, MidiKeyboardComponent::horizontalKeyboard));
         addAndMakeVisible (keyboard.get());
+        keyboard->setKeyWidth (32);
+        keyboard->setScrollButtonWidth (22);
     }
 
     ~VirtualKeyboard()
