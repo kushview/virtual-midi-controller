@@ -166,7 +166,8 @@ public:
 
         int sw = r.getWidth() / _dials.size();
         for (auto* dial : _dials) {
-            dial->setBounds (r.removeFromLeft (sw));
+            auto swr = r.removeFromLeft (sw);
+            dial->setBounds (swr.reduced (8));
         }
     }
 
