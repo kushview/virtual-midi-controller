@@ -17,13 +17,14 @@ namespace vmc
         OptionalScopedPointer<AudioDeviceManager> audioDeviceManager;
         std::unique_ptr<MidiOutput> midiOut;
         MidiKeyboardState keyboardState;
-
+        juce::String virtualDeviceName {"VMC-MIDI-Out"};
         void init()
         {
             audioDeviceManager.setOwned(new AudioDeviceManager());
-#if JUCE_MAC
-            midiOut = MidiOutput::createNewDevice("VMC");
-            midiOut->startBackgroundThread();
+#if JUCE_MAC || JUCE_LINUX
+            midiOut = MidiOutput::createNewDevice (virtualDeviceName);
+            if (midiOut != nullptr)
+                midiOut->startBackgroundThread();
 #endif
             keyboardState.addListener(this);
         }

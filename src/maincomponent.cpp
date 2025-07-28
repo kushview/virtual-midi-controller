@@ -15,6 +15,18 @@ namespace detail {
     }
 }
 
+CCDial::CCDial (Controller& c) : _controller (c) {
+    setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    setRange (0.0, 127.0, 1.0);
+    setTextBoxStyle (juce::Slider::NoTextBox, true, 10, 10);
+
+    onValueChange = [this]() {
+        int value = juce::roundToInt (getValue());
+        _controller.addMidiMessage (MidiMessage::controllerEvent (
+            _channel, _cc, value));
+    };
+}
+
 class MainComponent::Content : public Component
 {
 public:
@@ -79,6 +91,8 @@ public:
             midiChannel = juce::roundToInt (channel.getValue());
             owner.controller.getSettings().set (Settings::lastMidiChannel, midiChannel);
             keyboard.setMidiChannel (midiChannel);
+            for (auto* d : _dials)
+                d->setMidiChannel (midiChannel);
         };
 
         addAndMakeVisible (output);
@@ -95,12 +109,12 @@ public:
             }
         };
 
+        int midiCC = 102; // start CC number here.
         for (int i = 0; i < 8; ++i) {
-            auto dial = _dials.add (new juce::Slider());
-            dial->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
-            dial->setRange (0.0, 127.0, 1.0);
-            dial->setTextBoxStyle (juce::Slider::NoTextBox, true, 10, 10);
+            auto dial = _dials.add (new CCDial (owner.controller));
             addAndMakeVisible (dial);
+            dial->setControllerNumber (midiCC++);
+            dial->setMidiChannel (midiChannel);
         }
 
         setSize (440, 340);
@@ -126,7 +140,10 @@ public:
         midiChannel = settings.getInt (Settings::lastMidiChannel, 1);
         channel.setValue ((double) midiChannel, dontSendNotification);
         program.setValue (1.0 + (double) settings.getInt (Settings::lastMidiProgram, 0), dontSendNotification);
-
+        for (auto* dial : _dials) {
+            dial->setMidiChannel (midiChannel);
+        }
+        
         const String ID = owner.controller.getDeviceManager().getDefaultMidiOutputIdentifier();
         if (ID.isEmpty())
         {
@@ -192,7 +209,7 @@ private:
     Slider program, channel;
     ComboBox output;
 
-    juce::OwnedArray<juce::Slider> _dials;
+    juce::OwnedArray<CCDial> _dials;
     juce::Array<juce::MidiDeviceInfo> _devices;
 
     int midiChannel = 1;

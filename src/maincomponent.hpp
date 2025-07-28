@@ -11,6 +11,24 @@
 namespace vmc {
 
 class Controller;
+class MainComponent;
+
+class CCDial : public juce::Slider {
+public:
+    CCDial (Controller&);
+
+    void setControllerNumber (int ccNo) {
+        _cc = juce::jlimit (0, 127, ccNo);
+    }
+
+    void setMidiChannel (int ch) {
+        _channel = juce::jlimit (1, 16, ch);
+    }
+
+private:
+    Controller& _controller;
+    int _cc = 0, _channel = 1;
+};
 
 class MainComponent   : public Component
 {
