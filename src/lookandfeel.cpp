@@ -56,6 +56,11 @@ namespace vmc
         auto radius = juce::jmin(bounds.getWidth(), bounds.getHeight()) * 0.5f;
         auto centre = bounds.getCentre();
 
+        // Drop shadow (more pronounced)
+        juce::Rectangle<float> shadowBounds = bounds.translated(2.0f, 2.0f);
+        g.setColour(juce::Colours::black.withAlpha(0.4f));
+        g.fillEllipse(shadowBounds);
+
         // Base gradient (glossy effect)
         juce::ColourGradient baseGrad(
             juce::Colour::fromRGB(40, 42, 45), bounds.getTopLeft(),
@@ -63,12 +68,14 @@ namespace vmc
         g.setGradientFill(baseGrad);
         g.fillEllipse(bounds);
 
-        // Gloss overlay
-        juce::ColourGradient gloss(
-            juce::Colours::white.withAlpha(0.3f), bounds.getX(), bounds.getY(),
-            juce::Colours::transparentWhite, bounds.getX(), bounds.getCentreY(), false);
-        g.setGradientFill(gloss);
-        g.fillEllipse(bounds);
+        // Edge stroke (lighter than base)
+        g.setColour(juce::Colour::fromRGB(55, 58, 62).withAlpha(0.6f));
+        g.drawEllipse(bounds, 2.5f);
+
+        // Highlight edge for depth
+        juce::Rectangle<float> innerBounds = bounds.reduced(1.0f);
+        g.setColour(juce::Colours::white.withAlpha(0.04f));
+        g.drawEllipse(innerBounds, 1.0f);
 
         // Modern tick marks
         g.setColour(juce::Colours::white.withAlpha(0.15f));
@@ -84,16 +91,22 @@ namespace vmc
 
         // Draw pointer
         float angle = rotaryStartAngle + sliderPosProportional * (rotaryEndAngle - rotaryStartAngle);
-        float pointerLen = radius * 0.65f;
-        juce::Point<float> pointerEnd = centre.getPointOnCircumference(pointerLen, angle);
+        float pointerLen = radius * 0.25f; // Shorter length for the line
+        float pointerStartOffset = radius * 0.6f; // Start much closer to the edge
+
+        juce::Point<float> pointerStart = centre.getPointOnCircumference(pointerStartOffset, angle);
+        juce::Point<float> pointerEnd = centre.getPointOnCircumference(pointerStartOffset + pointerLen, angle);
 
         // Pointer glow effect
-        g.setColour(juce::Colours::cyan.withAlpha(0.15f));
-        g.drawLine(centre.x, centre.y, pointerEnd.x, pointerEnd.y, 4.5f);
+        g.setColour(juce::Colours::white.withAlpha(0.15f));
+        g.drawLine(pointerStart.x, pointerStart.y, pointerEnd.x, pointerEnd.y, 7.0f); // Thicker glow
 
-        // Main pointer
-        g.setColour(juce::Colour::fromRGB(0, 255, 255).withAlpha(0.85f));
-        g.drawLine(centre.x, centre.y, pointerEnd.x, pointerEnd.y, 2.0f);
+        // Main pointer with rounded caps
+        g.setColour(juce::Colours::white.withAlpha(0.95f));
+        juce::Path p;
+        p.startNewSubPath(pointerStart);
+        p.lineTo(pointerEnd);
+        g.strokePath(p, juce::PathStrokeType(4.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 
         // Center dot with gloss
         g.setColour(juce::Colours::black.withAlpha(0.8f));
