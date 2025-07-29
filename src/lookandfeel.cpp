@@ -15,7 +15,8 @@ namespace vmc
         else
             track = juce::Rectangle<float>(x, y + height * 0.5f - trackWidth * 0.5f, (float)width, trackWidth);
 
-        g.setColour(juce::Colours::darkgrey.darker(0.2f));
+        // Track background (matching rotary inner color)
+        g.setColour(juce::Colour::fromRGB(42, 42, 42));
         g.fillRoundedRectangle(track, 3.0f);
 
         // Draw the fader cap (handle)
@@ -28,22 +29,27 @@ namespace vmc
         else
             fader = juce::Rectangle<float>(sliderPos - faderWidth * 0.5f, y + (height - faderHeight) * 0.5f, faderWidth, faderHeight);
 
-        // Fader body
-        g.setColour(juce::Colours::lightgrey.withAlpha(0.95f));
+        // Fader body (darker outer ring like rotary)
+        g.setColour(juce::Colour::fromRGB(28, 28, 28));
         g.fillRoundedRectangle(fader, 4.0f);
 
-        // Fader outline
-        g.setColour(juce::Colours::black.withAlpha(0.7f));
-        g.drawRoundedRectangle(fader, 4.0f, 1.5f);
+        // Inner fader area (matching rotary inner color)
+        auto innerFader = fader.reduced(2.0f);
+        g.setColour(juce::Colour::fromRGB(42, 42, 42));
+        g.fillRoundedRectangle(innerFader, 3.0f);
 
-        // Fader highlight
-        g.setColour(juce::Colours::white.withAlpha(0.18f));
-        g.drawLine(fader.getX() + 2, fader.getY() + 3, fader.getRight() - 2, fader.getY() + 3, 2.0f);
+        // Subtle shadow at top
+        g.setColour(juce::Colours::black.withAlpha(0.2f));
+        g.drawRoundedRectangle(fader, 4.0f, 1.0f);
 
-        // Fader indicator line
-        g.setColour(juce::Colours::darkred.withAlpha(0.85f));
+        // Fader highlight (subtle like rotary)
+        g.setColour(juce::Colours::white.withAlpha(0.12f));
+        g.drawLine(fader.getX() + 2, fader.getY() + 3, fader.getRight() - 2, fader.getY() + 3, 1.5f);
+
+        // Fader indicator line (matching rotary blue color)
+        g.setColour(juce::Colour::fromRGB(64, 160, 255));
         float cy = fader.getCentreY();
-        g.drawLine(fader.getX() + 4, cy, fader.getRight() - 4, cy, 2.0f);
+        g.drawLine(fader.getX() + 4, cy, fader.getRight() - 4, cy, 2.5f);
     }
 
     // --- Rotary slider implementation ---
@@ -52,67 +58,45 @@ namespace vmc
                                        float sliderPosProportional, float rotaryStartAngle, float rotaryEndAngle,
                                        juce::Slider &slider)
     {
-        auto bounds = juce::Rectangle<float>((float)x, (float)y, (float)width, (float)height).reduced(4.0f);
+        auto bounds = juce::Rectangle<float>((float)x, (float)y, (float)width, (float)height).reduced(2.0f);
         auto radius = juce::jmin(bounds.getWidth(), bounds.getHeight()) * 0.5f;
         auto centre = bounds.getCentre();
-
-        // Drop shadow (more pronounced)
-        juce::Rectangle<float> shadowBounds = bounds.translated(2.0f, 2.0f);
-        g.setColour(juce::Colours::black.withAlpha(0.4f));
-        g.fillEllipse(shadowBounds);
-
-        // Base gradient (glossy effect)
-        juce::ColourGradient baseGrad(
-            juce::Colour::fromRGB(40, 42, 45), bounds.getTopLeft(),
-            juce::Colour::fromRGB(25, 27, 30), bounds.getBottomRight(), true);
-        g.setGradientFill(baseGrad);
+        
+        // Outer ring
+        g.setColour(juce::Colour::fromRGB(28, 28, 28));
         g.fillEllipse(bounds);
+        
+        // Inner circle (slightly smaller)
+        auto innerBounds = bounds.reduced(3.0f);
+        g.setColour(juce::Colour::fromRGB(42, 42, 42));
+        g.fillEllipse(innerBounds);
+        
+        // Subtle radial gradient for depth
+        juce::ColourGradient grad(
+            juce::Colours::black.withAlpha(0.15f), centre.x, centre.y,
+            juce::Colours::transparentBlack, centre.x + radius, centre.y + radius,
+            true);  // true = radial gradient
+        g.setGradientFill(grad);
+        g.fillEllipse(innerBounds);
 
-        // Edge stroke (lighter than base)
-        g.setColour(juce::Colour::fromRGB(55, 58, 62).withAlpha(0.6f));
-        g.drawEllipse(bounds, 2.5f);
-
-        // Highlight edge for depth
-        juce::Rectangle<float> innerBounds = bounds.reduced(1.0f);
-        g.setColour(juce::Colours::white.withAlpha(0.04f));
-        g.drawEllipse(innerBounds, 1.0f);
-
-        // Modern tick marks
-        g.setColour(juce::Colours::white.withAlpha(0.15f));
-        const int numTicks = 9;
-        for (int i = 0; i < numTicks; ++i)
-        {
-            float angle = rotaryStartAngle + (rotaryEndAngle - rotaryStartAngle) * (float)i / (numTicks - 1);
-            float tickLen = radius * 0.1f;
-            juce::Point<float> p1 = centre.getPointOnCircumference(radius - 2.0f, angle);
-            juce::Point<float> p2 = centre.getPointOnCircumference(radius - tickLen - 2.0f, angle);
-            g.drawLine(p1.x, p1.y, p2.x, p2.y, 1.0f);
-        }
-
-        // Draw pointer
+        // Calculate indicator position
         float angle = rotaryStartAngle + sliderPosProportional * (rotaryEndAngle - rotaryStartAngle);
-        float pointerLen = radius * 0.25f; // Shorter length for the line
-        float pointerStartOffset = radius * 0.6f; // Start much closer to the edge
-
-        juce::Point<float> pointerStart = centre.getPointOnCircumference(pointerStartOffset, angle);
-        juce::Point<float> pointerEnd = centre.getPointOnCircumference(pointerStartOffset + pointerLen, angle);
-
-        // Pointer glow effect
-        g.setColour(juce::Colours::white.withAlpha(0.15f));
-        g.drawLine(pointerStart.x, pointerStart.y, pointerEnd.x, pointerEnd.y, 7.0f); // Thicker glow
-
-        // Main pointer with rounded caps
-        g.setColour(juce::Colours::white.withAlpha(0.95f));
-        juce::Path p;
-        p.startNewSubPath(pointerStart);
-        p.lineTo(pointerEnd);
-        g.strokePath(p, juce::PathStrokeType(4.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-
-        // Center dot with gloss
-        g.setColour(juce::Colours::black.withAlpha(0.8f));
-        g.fillEllipse(centre.x - 3.5f, centre.y - 3.5f, 7.0f, 7.0f);
+        float dotOffset = radius * 0.75f;
+        juce::Point<float> dotCenter = centre.getPointOnCircumference(dotOffset, angle);
+        
+        // Draw indicator dot
+        float dotSize = 8.0f;  // Increased from 6.0f
+        g.setColour(juce::Colour::fromRGB(64, 160, 255));
+        g.fillEllipse(dotCenter.x - dotSize * 0.5f, 
+                      dotCenter.y - dotSize * 0.5f,
+                      dotSize, dotSize);
+        
+        // Small highlight on dot
+        float highlightSize = dotSize * 0.4f;  // Will automatically scale with new dotSize
         g.setColour(juce::Colours::white.withAlpha(0.4f));
-        g.fillEllipse(centre.x - 3.5f, centre.y - 3.5f, 4.0f, 2.5f);
+        g.fillEllipse(dotCenter.x - highlightSize * 0.5f,
+                      dotCenter.y - highlightSize * 0.5f,
+                      highlightSize, highlightSize);
     }
-
 }
+

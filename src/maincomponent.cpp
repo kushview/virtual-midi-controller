@@ -164,7 +164,7 @@ public:
 
     void paint (Graphics& g) override
     {
-        g.fillAll (Colours::darkgrey);
+        g.fillAll (Colours::black.brighter (0.34f));
     }
 
     void resized() override
@@ -182,9 +182,10 @@ public:
         keyboard.setBounds (r3);
 
         int sw = r.getWidth() / _dials.size();
+        int swIndent = 16;
         for (auto* dial : _dials) {
             auto swr = r.removeFromLeft (sw);
-            dial->setBounds (swr.reduced (8));
+            dial->setBounds (swr.reduced (swIndent));
         }
     }
 
