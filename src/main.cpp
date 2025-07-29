@@ -41,7 +41,7 @@ namespace vmc
         void shutdown() override
         {
             shutdownGui();
-            tooltipWindow = nullptr; // Clean up the tooltip window
+           
             controller->saveSettings();
             controller->shutdown();
             controller.reset();
@@ -86,8 +86,9 @@ namespace vmc
                 setVisible(true);
             }
 
-            ~MainWindow()
+            ~MainWindow() override
             {
+                clearContentComponent();
                 setConstrainer(nullptr);
             }
 
@@ -133,6 +134,7 @@ namespace vmc
 
         void shutdownGui()
         {
+            tooltipWindow = nullptr; // Clean up the tooltip window
             if (mainWindow != nullptr)
             {
                 mainWindow->savePersistentData();
