@@ -131,17 +131,39 @@ namespace vmc
     {
         auto bounds = button.getLocalBounds().toFloat();
         
-        // Main background
+        // Main background (darker outer ring)
         g.setColour(juce::Colour::fromRGB(28, 28, 28));
         g.fillRoundedRectangle(bounds, 3.0f);
 
-        // Inner area
+        // Inner area - use button colors when available
         auto innerBounds = bounds.reduced(1);
-        g.setColour(shouldDrawButtonAsDown ? juce::Colour::fromRGB(35, 35, 35) 
-                                         : juce::Colour::fromRGB(42, 42, 42));
+        
+        // Check if this is a toggle button and get appropriate colors
+        juce::Colour fillColour;
+        if (button.getToggleState())
+        {
+            // Button is toggled ON - use buttonOnColourId if available
+            fillColour = button.findColour(juce::TextButton::buttonOnColourId, false);
+            if (fillColour == juce::Colour())
+                fillColour = juce::Colour::fromRGB(64, 160, 255); // fallback blue
+        }
+        else
+        {
+            // Button is toggled OFF - use buttonColourId if available  
+            fillColour = button.findColour(juce::TextButton::buttonColourId, false);
+            if (fillColour == juce::Colour())
+                fillColour = juce::Colour::fromRGB(42, 42, 42); // fallback gray
+        }
+        
+        // Apply pressed state darkening
+        if (shouldDrawButtonAsDown)
+            fillColour = fillColour.darker(0.1f);
+        
+        g.setColour(fillColour);
         g.fillRoundedRectangle(innerBounds, 2.0f);
 
-        if (shouldDrawButtonAsHighlighted) {
+        // Highlight overlay for mouse-over
+        if (shouldDrawButtonAsHighlighted && !button.getToggleState()) {
             g.setColour(juce::Colour::fromRGB(64, 160, 255).withAlpha(0.1f));
             g.fillRoundedRectangle(innerBounds, 2.0f);
         }
@@ -183,6 +205,40 @@ namespace vmc
             juce::Colours::white.withAlpha(0.0f), 0, (float)height, false);
         g.setGradientFill(grad);
         g.fillRect(1, 1, width - 2, height - 2);
-}
+    }
+
+    void LookAndFeel::drawButtonText(juce::Graphics& g, juce::TextButton& button,
+                                    bool shouldDrawButtonAsHighlighted,
+                                    bool shouldDrawButtonAsDown)
+    {
+        auto font = getTextButtonFont(button, button.getHeight());
+        g.setFont(font);
+        
+        // Use appropriate text color based on toggle state
+        juce::Colour textColour;
+        if (button.getToggleState())
+        {
+            textColour = button.findColour(juce::TextButton::textColourOnId);
+        }
+        else
+        {
+            textColour = button.findColour(juce::TextButton::textColourOffId);
+        }
+        
+        g.setColour(textColour.withMultipliedAlpha(button.isEnabled() ? 1.0f : 0.5f));
+
+        const int yIndent = juce::jmin(4, button.proportionOfHeight(0.3f));
+        const int cornerSize = juce::jmin(button.getHeight(), button.getWidth()) / 2;
+
+        const int fontHeight = juce::roundToInt(font.getHeight() * 0.6f);
+        const int leftIndent = juce::jmin(fontHeight, 2 + cornerSize / (button.isConnectedOnLeft() ? 4 : 2));
+        const int rightIndent = juce::jmin(fontHeight, 2 + cornerSize / (button.isConnectedOnRight() ? 4 : 2));
+        const int textWidth = button.getWidth() - leftIndent - rightIndent;
+
+        if (textWidth > 0)
+            g.drawFittedText(button.getButtonText(),
+                           leftIndent, yIndent, textWidth, button.getHeight() - yIndent * 2,
+                           juce::Justification::centred, 2);
+    }
 
 }

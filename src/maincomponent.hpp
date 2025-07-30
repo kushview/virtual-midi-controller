@@ -9,6 +9,16 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 
 #include "unlock.hpp"
+#include "midicceditor.hpp"
+
+// Base UI dimensions - the keyboard area should stay this size
+#ifndef VMC_WIDTH
+#define VMC_WIDTH 900
+#endif
+
+#ifndef VMC_HEIGHT
+#define VMC_HEIGHT 320
+#endif
 
 namespace vmc {
 
@@ -41,10 +51,14 @@ public:
     void paint (Graphics&) override;
     void resized() override;
     
+    void toggleCCEditor();
+    
 private:
     Controller& controller;
     friend class Content; class Content;
     std::unique_ptr<Content> content;
+    std::unique_ptr<MidiCCDrawer> ccDrawer;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
 

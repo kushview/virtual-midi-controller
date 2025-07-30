@@ -10,14 +10,6 @@
 #include "lookandfeel.hpp"
 #include "controller.hpp"
 
-#ifndef VMC_WIDTH
-#define VMC_WIDTH 900
-#endif
-
-#ifndef VMC_HEIGHT
-#define VMC_HEIGHT 320
-#endif
-
 namespace vmc
 {
     class Application : public JUCEApplication

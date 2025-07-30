@@ -35,6 +35,9 @@ public:
     void drawButtonBackground(juce::Graphics&, juce::Button&, const juce::Colour& backgroundColour,
                              bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override;
 
+    void drawButtonText(juce::Graphics&, juce::TextButton&, bool shouldDrawButtonAsHighlighted, 
+                       bool shouldDrawButtonAsDown) override;
+
     void drawPopupMenuBackground(juce::Graphics&, int width, int height) override;
 };
 

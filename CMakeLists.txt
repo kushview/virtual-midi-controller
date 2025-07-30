@@ -24,6 +24,8 @@ target_sources(virtual-midi-controller
         src/main.cpp
         src/maincomponent.cpp
         src/lookandfeel.cpp
+        src/midicceditor.cpp
+        src/virtualkeyboard.cpp
 )
 
 target_compile_definitions(virtual-midi-controller
