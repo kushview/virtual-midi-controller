@@ -73,97 +73,6 @@ void CCNumberEditor::validateAndUpdate()
 }
 
 //==============================================================================
-// ChannelEditor Implementation
-//==============================================================================
-
-ChannelEditor::ChannelEditor()
-{
-    addAndMakeVisible(comboBox);
-    
-    for (int i = 1; i <= 16; ++i)
-        comboBox.addItem(juce::String(i), i);
-    
-    comboBox.setSelectedId(1, juce::dontSendNotification);
-    
-    // Style to match aluminum theme
-    comboBox.setColour(juce::ComboBox::backgroundColourId, juce::Colour::fromRGB(35, 38, 42));
-    comboBox.setColour(juce::ComboBox::textColourId, juce::Colours::white.withAlpha(0.9f));
-    comboBox.setColour(juce::ComboBox::outlineColourId, juce::Colours::white.withAlpha(0.2f));
-    comboBox.setColour(juce::ComboBox::arrowColourId, juce::Colours::white.withAlpha(0.7f));
-    comboBox.setColour(juce::ComboBox::buttonColourId, juce::Colour::fromRGB(40, 43, 47));
-    
-    // Style the popup menu
-    comboBox.setColour(juce::PopupMenu::backgroundColourId, juce::Colour::fromRGB(35, 38, 42));
-    comboBox.setColour(juce::PopupMenu::textColourId, juce::Colours::white.withAlpha(0.9f));
-    comboBox.setColour(juce::PopupMenu::highlightedBackgroundColourId, juce::Colour::fromRGB(55, 58, 62));
-    
-    comboBox.onChange = [this]()
-    {
-        int newValue = comboBox.getSelectedId();
-        if (newValue != currentValue)
-        {
-            currentValue = newValue;
-            if (onValueChanged)
-                onValueChanged(currentValue);
-        }
-    };
-}
-
-ChannelEditor::~ChannelEditor() = default;
-
-void ChannelEditor::setValue(int channel)
-{
-    currentValue = juce::jlimit(1, 16, channel);
-    comboBox.setSelectedId(currentValue, juce::dontSendNotification);
-}
-
-int ChannelEditor::getValue() const
-{
-    return currentValue;
-}
-
-void ChannelEditor::resized()
-{
-    comboBox.setBounds(getLocalBounds().reduced(2));
-}
-
-//==============================================================================
-// LearnButton Implementation
-//==============================================================================
-
-LearnButton::LearnButton()
-{
-    addAndMakeVisible(button);
-    button.setButtonText("Learn");
-    
-    // Style to match aluminum theme
-    button.setColour(juce::TextButton::buttonColourId, juce::Colour::fromRGB(40, 43, 47));
-    button.setColour(juce::TextButton::buttonOnColourId, juce::Colour::fromRGB(180, 60, 60)); // Red when learning
-    button.setColour(juce::TextButton::textColourOffId, juce::Colours::white.withAlpha(0.8f));
-    button.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
-    
-    button.onClick = [this]()
-    {
-        if (onLearnClicked)
-            onLearnClicked();
-    };
-}
-
-LearnButton::~LearnButton() = default;
-
-void LearnButton::setLearning(bool isLearning)
-{
-    learning = isLearning;
-    button.setButtonText(learning ? "Stop" : "Learn");
-    button.setToggleState(learning, juce::dontSendNotification);
-}
-
-void LearnButton::resized()
-{
-    button.setBounds(getLocalBounds().reduced(2));
-}
-
-//==============================================================================
 // MidiCCEditor Implementation
 //==============================================================================
 
@@ -213,7 +122,7 @@ void MidiCCEditor::paint(juce::Graphics& g)
     
     // Header text
     g.setColour(juce::Colours::white.withAlpha(0.9f));
-    g.setFont(juce::Font(14.0f, juce::Font::bold));
+    g.setFont(juce::Font(juce::FontOptions (14.0f, juce::Font::bold)));
     g.drawText("MIDI CC Mappings", headerBounds, juce::Justification::centred);
     
     // Subtle outline that blends with the brush effect
@@ -230,10 +139,8 @@ void MidiCCEditor::resized()
 
 void MidiCCEditor::setupTable()
 {
-    table.getHeader().addColumn("Component", ComponentNameColumn, 120);
-    table.getHeader().addColumn("CC#", CCNumberColumn, 60);
-    table.getHeader().addColumn("Channel", ChannelColumn, 70);
-    table.getHeader().addColumn("Learn", LearnColumn, 60);
+    table.getHeader().addColumn("Component", ComponentNameColumn, 200);
+    table.getHeader().addColumn("CC#", CCNumberColumn, 100);
     
     table.setHeaderHeight(22);
     table.setRowHeight(24);
@@ -324,7 +231,7 @@ void MidiCCEditor::paintCell(juce::Graphics& g, int rowNumber, int columnId, int
     
     // Use white text with good contrast on aluminum background
     g.setColour(juce::Colours::white.withAlpha(0.85f));
-    g.setFont(juce::Font(12.0f));
+    g.setFont (juce::Font (juce::FontOptions (12.0f)));
     
     juce::String text;
     
@@ -348,41 +255,19 @@ juce::Component* MidiCCEditor::refreshComponentForCell(int rowNumber, int column
     
     auto& mapping = mappings.getReference(rowNumber);
     
-    switch (columnId)
+    // Only handle the CC Number column - Component Name is just painted text
+    if (columnId == CCNumberColumn)
     {
-        case CCNumberColumn:
-        {
-            auto* editor = dynamic_cast<CCNumberEditor*>(existingComponentToUpdate);
-            if (editor == nullptr)
-                editor = new CCNumberEditor();
-            
-            editor->setValue(mapping.ccNumber >= 0 ? mapping.ccNumber : 0);
-            editor->onValueChanged = [this, rowNumber](int value) { setCCMapping(rowNumber, value); };
-            return editor;
-        }
-        case ChannelColumn:
-        {
-            auto* editor = dynamic_cast<ChannelEditor*>(existingComponentToUpdate);
-            if (editor == nullptr)
-                editor = new ChannelEditor();
-            
-            editor->setValue(mapping.midiChannel);
-            editor->onValueChanged = [this, rowNumber](int value) { setChannelMapping(rowNumber, value); };
-            return editor;
-        }
-        case LearnColumn:
-        {
-            auto* button = dynamic_cast<LearnButton*>(existingComponentToUpdate);
-            if (button == nullptr)
-                button = new LearnButton();
-            
-            button->setLearning(mapping.isLearning);
-            button->onLearnClicked = [this, rowNumber]() { startLearning(rowNumber); };
-            return button;
-        }
-        default:
-            return nullptr;
+        auto* editor = dynamic_cast<CCNumberEditor*>(existingComponentToUpdate);
+        if (editor == nullptr)
+            editor = new CCNumberEditor();
+        
+        editor->setValue(mapping.ccNumber >= 0 ? mapping.ccNumber : 0);
+        editor->onValueChanged = [this, rowNumber](int value) { setCCMapping(rowNumber, value); };
+        return editor;
     }
+    
+    return nullptr;
 }
 
 void MidiCCEditor::setCCMapping(int row, int ccNumber)
@@ -391,42 +276,6 @@ void MidiCCEditor::setCCMapping(int row, int ccNumber)
     {
         mappings.getReference(row).ccNumber = ccNumber;
         // TODO: Update the actual component's CC mapping
-    }
-}
-
-void MidiCCEditor::setChannelMapping(int row, int channel)
-{
-    if (row >= 0 && row < mappings.size())
-    {
-        mappings.getReference(row).midiChannel = channel;
-        // TODO: Update the actual component's MIDI channel
-    }
-}
-
-void MidiCCEditor::startLearning(int row)
-{
-    if (learningRow >= 0 && learningRow < mappings.size())
-    {
-        mappings.getReference(learningRow).isLearning = false;
-    }
-    
-    learningRow = row;
-    if (row >= 0 && row < mappings.size())
-    {
-        mappings.getReference(row).isLearning = true;
-        // TODO: Start MIDI learn mode
-    }
-    
-    table.repaint();
-}
-
-void MidiCCEditor::stopLearning()
-{
-    if (learningRow >= 0 && learningRow < mappings.size())
-    {
-        mappings.getReference(learningRow).isLearning = false;
-        learningRow = -1;
-        table.repaint();
     }
 }
 

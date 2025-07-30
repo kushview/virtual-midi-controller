@@ -92,12 +92,12 @@ namespace vmc
             addAndMakeVisible(ccEditorButton);
             ccEditorButton.setButtonText("CC Editor");
             ccEditorButton.setClickingTogglesState(true);
-            
+
             // Set text color to be visible on the aluminum background
             ccEditorButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white.withAlpha(0.8f));
             ccEditorButton.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
             ccEditorButton.setColour(juce::TextButton::buttonOnColourId, juce::Colour::fromRGB(64, 160, 255));
-            
+
             ccEditorButton.onClick = [this]()
             {
                 owner.toggleCCEditor();
@@ -239,13 +239,13 @@ namespace vmc
             {
                 const int logoHeight = 40;
                 const int logoWidth = (int)((float)logoHeight * logo.getWidth() / logo.getHeight());
-                logo = logo.rescaled (logoWidth, logoHeight, juce::Graphics::ResamplingQuality::highResamplingQuality);
-                g.drawImageWithin (logo,
-                              bounds.getCentreX() - logoWidth / 2,
-                              4, // Top margin
-                              logoWidth, logoHeight,
-                              juce::RectanglePlacement::centred,
-                              false);
+                logo = logo.rescaled(logoWidth, logoHeight, juce::Graphics::ResamplingQuality::highResamplingQuality);
+                g.drawImageWithin(logo,
+                                  bounds.getCentreX() - logoWidth / 2,
+                                  4, // Top margin
+                                  logoWidth, logoHeight,
+                                  juce::RectanglePlacement::centred,
+                                  false);
             }
         }
 
@@ -308,14 +308,16 @@ namespace vmc
     MainComponent::MainComponent(Controller &vc)
         : controller(vc)
     {
+        status.load();
+        
         setOpaque(true);
         content.reset(new Content(*this));
         addAndMakeVisible(content.get());
-        
+
         // Create and add the CC drawer
         ccDrawer.reset(new MidiCCDrawer(vc));
         addAndMakeVisible(ccDrawer.get());
-        
+
         // Set up callback to resize window when drawer size changes
         ccDrawer->onSizeChanged = [this](int drawerHeight)
         {
@@ -324,7 +326,15 @@ namespace vmc
             int totalHeight = VMC_HEIGHT + drawerHeight;
             setSize(VMC_WIDTH, totalHeight);
         };
-        
+
+        overlay = std::make_unique<kv::UnlockOverlay>(status, TRANS("Unlock Virtual MIDI Keyboard"));
+        addAndMakeVisible (overlay.get());
+        overlay->onDismissed = [this]() {
+            overlay->setVisible (! status.isUnlocked());
+            resized();
+        };
+        overlay->setVisible (! status.isUnlocked());
+
         // Set initial size to the base UI dimensions
         setSize(VMC_WIDTH, VMC_HEIGHT);
     }
@@ -333,6 +343,7 @@ namespace vmc
     {
         ccDrawer.reset();
         content.reset();
+        overlay.reset();
     }
 
     void MainComponent::paint(Graphics &g)
@@ -343,11 +354,11 @@ namespace vmc
     void MainComponent::resized()
     {
         auto bounds = getLocalBounds();
-        
+
         // The main content should always maintain the base UI size (VMC_HEIGHT)
         auto contentBounds = bounds.removeFromTop(VMC_HEIGHT);
         content->setBounds(contentBounds);
-        
+
         // The drawer gets any remaining space at the bottom
         if (ccDrawer)
         {
@@ -361,6 +372,11 @@ namespace vmc
                 ccDrawer->setBounds(bounds.getX(), contentBounds.getBottom(), bounds.getWidth(), 0);
             }
         }
+
+        if (overlay != nullptr && overlay->isVisible())
+        {
+            overlay->setBounds(getLocalBounds());
+        }
     }
 
     void MainComponent::toggleCCEditor()
@@ -368,31 +384,31 @@ namespace vmc
         if (ccDrawer)
         {
             ccDrawer->toggleDrawer();
-            
+
             // Populate the mappings when opening
             if (ccDrawer->isOpen())
             {
-                auto& editor = ccDrawer->getEditor();
+                auto &editor = ccDrawer->getEditor();
                 editor.refreshMappings();
-                
+
                 // Add mappings for all UI components
                 if (content)
                 {
                     // Access the private Content class to get component references
                     // This is a simplified approach - in a real implementation you'd want
                     // a cleaner way to access these components
-                    
+
                     // Add vertical sliders
                     editor.addMapping("Slider 1", nullptr, MidiCCMapping::VerticalSlider);
                     editor.addMapping("Slider 2", nullptr, MidiCCMapping::VerticalSlider);
                     editor.addMapping("Slider 3", nullptr, MidiCCMapping::VerticalSlider);
-                    
+
                     // Add dials (we know there are 8 from the code)
                     for (int i = 0; i < 8; ++i)
                     {
                         editor.addMapping("Dial " + juce::String(i + 1), nullptr, MidiCCMapping::Dial);
                     }
-                    
+
                     // Add other controls
                     editor.addMapping("Program", nullptr, MidiCCMapping::ProgramSlider);
                     editor.addMapping("Channel", nullptr, MidiCCMapping::ChannelSlider);

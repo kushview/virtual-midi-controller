@@ -136,7 +136,9 @@ namespace vmc
             LookAndFeel::setDefaultLookAndFeel(nullptr);
         }
     };
-
 }
 
 START_JUCE_APPLICATION(vmc::Application)
+
+// .hxx includes
+#include <kv/ui/unlockform.hxx>

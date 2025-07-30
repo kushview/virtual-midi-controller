@@ -37,48 +37,6 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CCNumberEditor)
 };
 
-// Custom cell widget for MIDI channel editing
-class ChannelEditor : public juce::Component
-{
-public:
-    ChannelEditor();
-    ~ChannelEditor() override;
-    
-    void setValue(int channel);
-    int getValue() const;
-    
-    std::function<void(int)> onValueChanged;
-    
-    void resized() override;
-    
-private:
-    juce::ComboBox comboBox;
-    int currentValue = 1;
-    
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ChannelEditor)
-};
-
-// Custom cell widget for MIDI learn button
-class LearnButton : public juce::Component
-{
-public:
-    LearnButton();
-    ~LearnButton() override;
-    
-    void setLearning(bool isLearning);
-    bool isLearning() const { return learning; }
-    
-    std::function<void()> onLearnClicked;
-    
-    void resized() override;
-    
-private:
-    juce::TextButton button;
-    bool learning = false;
-    
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LearnButton)
-};
-
 // Structure to hold mapping data for each UI component
 struct MidiCCMapping
 {
@@ -125,9 +83,6 @@ public:
     
     // MIDI CC functionality
     void setCCMapping(int row, int ccNumber);
-    void setChannelMapping(int row, int channel);
-    void startLearning(int row);
-    void stopLearning();
     
     // Toggle drawer visibility
     void setVisible(bool shouldBeVisible) override;
@@ -140,15 +95,12 @@ private:
     juce::Array<MidiCCMapping> mappings;
     
     bool drawerOpen = false;
-    int learningRow = -1;
     
     // Column IDs
     enum ColumnIds
     {
         ComponentNameColumn = 1,
-        CCNumberColumn = 2,
-        ChannelColumn = 3,
-        LearnColumn = 4
+        CCNumberColumn = 2
     };
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MidiCCEditor)

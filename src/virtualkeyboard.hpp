@@ -11,10 +11,10 @@
 namespace vmc {
 
 // Custom MIDI keyboard component with aluminum theme styling
-class StyledMidiKeyboardComponent : public juce::MidiKeyboardComponent
+class MidiKeyboard : public juce::MidiKeyboardComponent
 {
 public:
-    StyledMidiKeyboardComponent(juce::MidiKeyboardState& state, Orientation orientation);
+    MidiKeyboard(juce::MidiKeyboardState& state, Orientation orientation);
     
     // Override the drawing methods to match our aluminum theme
     void drawWhiteNote(int midiNoteNumber, juce::Graphics& g, juce::Rectangle<float> area,
@@ -29,7 +29,7 @@ class VirtualKeyboard : public Component
 public:
     VirtualKeyboard (MidiKeyboardState& state)
     {
-        keyboard.reset (new StyledMidiKeyboardComponent (state, StyledMidiKeyboardComponent::horizontalKeyboard));
+        keyboard.reset (new MidiKeyboard (state, MidiKeyboard::horizontalKeyboard));
         addAndMakeVisible (keyboard.get());
         keyboard->setKeyWidth (32);
         keyboard->setScrollButtonWidth (22);
@@ -51,10 +51,10 @@ public:
         keyboard->setBounds (getLocalBounds());
     }
 
-    StyledMidiKeyboardComponent& getMidiKeyboardComponent() { return *keyboard; }
+    MidiKeyboard& getMidiKeyboardComponent() { return *keyboard; }
 
 private:
-    std::unique_ptr<StyledMidiKeyboardComponent> keyboard;
+    std::unique_ptr<MidiKeyboard> keyboard;
 };
 
 }

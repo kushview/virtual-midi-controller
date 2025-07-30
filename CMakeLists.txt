@@ -31,7 +31,8 @@ target_sources(virtual-midi-controller
 target_compile_definitions(virtual-midi-controller
     PUBLIC
         JUCE_WEB_BROWSER=0
-        JUCE_USE_CURL=0
+        JUCE_USE_CURL=1
+        JUCE_LOAD_CURL_SYMBOLS_LAZILY=1
         JUCE_VST3_CAN_REPLACE_VST2=0)
 target_include_directories(virtual-midi-controller PRIVATE 
     src
@@ -46,4 +47,5 @@ target_link_libraries(virtual-midi-controller PRIVATE
     juce_gui_basics 
     juce_audio_devices
     juce_audio_utils
+    juce_product_unlocking
     VMCData)

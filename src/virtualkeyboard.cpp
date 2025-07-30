@@ -7,12 +7,12 @@
 
 namespace vmc {
 
-StyledMidiKeyboardComponent::StyledMidiKeyboardComponent(juce::MidiKeyboardState& state, Orientation orientation)
+MidiKeyboard::MidiKeyboard(juce::MidiKeyboardState& state, Orientation orientation)
     : juce::MidiKeyboardComponent(state, orientation)
 {
 }
 
-void StyledMidiKeyboardComponent::drawWhiteNote(int midiNoteNumber, juce::Graphics& g, juce::Rectangle<float> area,
+void MidiKeyboard::drawWhiteNote(int midiNoteNumber, juce::Graphics& g, juce::Rectangle<float> area,
                                                bool isDown, bool isOver, juce::Colour lineColour, juce::Colour textColour)
 {
     // White key background
@@ -45,7 +45,7 @@ void StyledMidiKeyboardComponent::drawWhiteNote(int midiNoteNumber, juce::Graphi
     }
 }
 
-void StyledMidiKeyboardComponent::drawBlackNote(int midiNoteNumber, juce::Graphics& g, juce::Rectangle<float> area,
+void MidiKeyboard::drawBlackNote(int midiNoteNumber, juce::Graphics& g, juce::Rectangle<float> area,
                                                bool isDown, bool isOver, juce::Colour noteFillColour)
 {
     // Black key background - match the aluminum theme's dark colors
