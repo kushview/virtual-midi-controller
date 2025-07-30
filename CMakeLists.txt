@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_subdirectory(deps/JUCE)
+include_directories(deps/libkv-auth/include)
 
 juce_add_gui_app(virtual-midi-controller
     COMPANY_NAME "Kushview"
@@ -34,8 +35,13 @@ target_include_directories(virtual-midi-controller PRIVATE
     src
     deps/lua-5.3.5/src)
 
+juce_add_binary_data(VMCData
+    SOURCES
+        data/vmc-logo.png)
+
 target_link_libraries(virtual-midi-controller PRIVATE 
     juce_core 
     juce_gui_basics 
     juce_audio_devices
-    juce_audio_utils)
+    juce_audio_utils
+    VMCData)

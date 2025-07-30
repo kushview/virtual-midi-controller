@@ -8,6 +8,8 @@
 #include "juce.hpp"
 #include <juce_gui_basics/juce_gui_basics.h>
 
+#include "unlock.hpp"
+
 namespace vmc {
 
 class Controller;
