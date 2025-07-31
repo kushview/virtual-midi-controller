@@ -74,6 +74,59 @@ void CCNumberEditor::validateAndUpdate()
 }
 
 //==============================================================================
+// ControlNameEditor Implementation
+//==============================================================================
+
+ControlNameEditor::ControlNameEditor()
+{
+    addAndMakeVisible(nameLabel);
+    nameLabel.setEditable(false, true, false); // Not editable by default, but becomes editable on double-click
+    nameLabel.setText("Control", juce::dontSendNotification);
+    nameLabel.setJustificationType(juce::Justification::centredLeft);
+    nameLabel.addListener(this);
+    
+    // Style to match aluminum theme
+    nameLabel.setColour(juce::Label::backgroundColourId, juce::Colours::transparentBlack);
+    nameLabel.setColour(juce::Label::textColourId, juce::Colours::white.withAlpha(0.85f));
+    nameLabel.setColour(juce::Label::outlineColourId, juce::Colours::transparentBlack);
+    
+    // Style for when editing
+    nameLabel.setColour(juce::Label::backgroundWhenEditingColourId, juce::Colour::fromRGB(35, 38, 42));
+    nameLabel.setColour(juce::Label::textWhenEditingColourId, juce::Colours::white.withAlpha(0.9f));
+    nameLabel.setColour(juce::Label::outlineWhenEditingColourId, juce::Colours::white.withAlpha(0.4f));
+    
+    nameLabel.setFont(juce::Font(juce::FontOptions(12.0f)));
+}
+
+ControlNameEditor::~ControlNameEditor()
+{
+    nameLabel.removeListener(this);
+}
+
+void ControlNameEditor::setText(const juce::String& text)
+{
+    nameLabel.setText(text, juce::dontSendNotification);
+}
+
+juce::String ControlNameEditor::getText() const
+{
+    return nameLabel.getText();
+}
+
+void ControlNameEditor::resized()
+{
+    nameLabel.setBounds(getLocalBounds().reduced(4, 2));
+}
+
+void ControlNameEditor::labelTextChanged(juce::Label* labelThatHasChanged)
+{
+    if (labelThatHasChanged == &nameLabel && onTextChanged)
+    {
+        onTextChanged(nameLabel.getText());
+    }
+}
+
+//==============================================================================
 // MidiCCEditor Implementation
 //==============================================================================
 
@@ -140,8 +193,8 @@ void MidiCCEditor::resized()
 
 void MidiCCEditor::setupTable()
 {
-    table.getHeader().addColumn("Component", ComponentNameColumn, 200);
-    table.getHeader().addColumn("CC#", CCNumberColumn, 100);
+    table.getHeader().addColumn ("Name", ControlNameColumn, 200);
+    table.getHeader().addColumn ("CC#", CCNumberColumn, 100);
     
     table.setHeaderHeight(22);
     table.setRowHeight(24);
@@ -167,7 +220,7 @@ void MidiCCEditor::refreshMappings()
 void MidiCCEditor::addMapping(const juce::String& name, juce::Component* comp, MidiCCMapping::ComponentType type)
 {
     MidiCCMapping mapping;
-    mapping.componentName = name;
+    mapping.componentName = comp != nullptr ? comp->getName() : name;
     mapping.component = comp;
     mapping.type = type;
     mapping.midiChannel = 1;
@@ -190,20 +243,20 @@ void MidiCCEditor::paintRowBackground(juce::Graphics& g, int rowNumber, int widt
 {
     if (rowIsSelected)
     {
-        // Selected row with aluminum tint
-        g.setColour(juce::Colour::fromRGB(65, 68, 72).withAlpha(0.8f));
+        // Selected row with aluminum tint - solid color
+        g.setColour(juce::Colour::fromRGB(65, 68, 72));
         g.fillRect(0, 0, width, height);
     }
     else if (rowNumber % 2 == 0)
     {
-        // Alternate rows with subtle aluminum variation
-        g.setColour(juce::Colour::fromRGB(48, 51, 55).withAlpha(0.3f));
+        // Alternate rows with subtle aluminum variation - solid color
+        g.setColour(juce::Colour::fromRGB(48, 51, 55));
         g.fillRect(0, 0, width, height);
     }
     else
     {
-        // Default transparent for odd rows
-        g.setColour(juce::Colours::transparentBlack);
+        // Default solid background for odd rows
+        g.setColour(juce::Colour::fromRGB(45, 48, 52));
         g.fillRect(0, 0, width, height);
     }
     
@@ -217,25 +270,8 @@ void MidiCCEditor::paintCell(juce::Graphics& g, int rowNumber, int columnId, int
     if (rowNumber >= mappings.size())
         return;
     
-    const auto& mapping = mappings[rowNumber];
-    
-    // Use white text with good contrast on aluminum background
-    g.setColour(juce::Colours::white.withAlpha(0.85f));
-    g.setFont(juce::Font(juce::FontOptions(12.0f)));
-    
-    juce::String text;
-    
-    switch (columnId)
-    {
-        case ComponentNameColumn:
-            text = mapping.componentName;
-            break;
-        default:
-            // Other columns use custom components
-            return;
-    }
-    
-    g.drawText(text, 4, 0, width - 8, height, juce::Justification::centredLeft);
+    // Since both columns now use custom components, we don't need to paint any text
+    // The custom components will handle their own rendering
 }
 
 juce::Component* MidiCCEditor::refreshComponentForCell(int rowNumber, int columnId, bool isRowSelected, juce::Component* existingComponentToUpdate)
@@ -245,8 +281,19 @@ juce::Component* MidiCCEditor::refreshComponentForCell(int rowNumber, int column
     
     auto& mapping = mappings.getReference(rowNumber);
     
-    // Only handle the CC Number column - Component Name is just painted text
-    if (columnId == CCNumberColumn)
+    if (columnId == ControlNameColumn)
+    {
+        auto* nameEditor = dynamic_cast<ControlNameEditor*>(existingComponentToUpdate);
+        if (nameEditor == nullptr)
+            nameEditor = new ControlNameEditor();
+        
+        nameEditor->setText(mapping.componentName);
+        nameEditor->onTextChanged = [this, rowNumber](const juce::String& newName) { 
+            setControlName(rowNumber, newName); 
+        };
+        return nameEditor;
+    }
+    else if (columnId == CCNumberColumn)
     {
         auto* editor = dynamic_cast<CCNumberEditor*>(existingComponentToUpdate);
         if (editor == nullptr)
@@ -268,6 +315,17 @@ void MidiCCEditor::setCCMapping(int row, int ccNumber)
         ref.ccNumber = ccNumber;
         if (auto* d = dynamic_cast<CCDial*> (ref.component))
             d->setControllerNumber (ccNumber);
+    }
+}
+
+void MidiCCEditor::setControlName(int row, const juce::String& name)
+{
+    if (row >= 0 && row < mappings.size())
+    {
+        auto& ref = mappings.getReference(row);
+        ref.componentName = name;
+        if (auto c = ref.component)
+            c->setName (name);
     }
 }
 

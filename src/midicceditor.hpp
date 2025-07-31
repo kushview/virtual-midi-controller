@@ -37,6 +37,30 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CCNumberEditor)
 };
 
+// Custom cell widget for control name editing using an editable label
+class ControlNameEditor : public juce::Component,
+                         public juce::Label::Listener
+{
+public:
+    ControlNameEditor();
+    ~ControlNameEditor() override;
+    
+    void setText(const juce::String& text);
+    juce::String getText() const;
+    
+    std::function<void(const juce::String&)> onTextChanged;
+    
+    void resized() override;
+    
+    // Label::Listener override
+    void labelTextChanged(juce::Label* labelThatHasChanged) override;
+    
+private:
+    juce::Label nameLabel;
+    
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ControlNameEditor)
+};
+
 // Structure to hold mapping data for each UI component
 struct MidiCCMapping
 {
@@ -83,7 +107,8 @@ public:
     
     // MIDI CC functionality
     void setCCMapping(int row, int ccNumber);
-    
+    void setControlName(int row, const juce::String& name);
+
     // Toggle drawer visibility
     void setVisible(bool shouldBeVisible) override;
     bool isDrawerOpen() const { return drawerOpen; }
@@ -99,7 +124,7 @@ private:
     // Column IDs
     enum ColumnIds
     {
-        ComponentNameColumn = 1,
+        ControlNameColumn = 1,
         CCNumberColumn = 2
     };
     

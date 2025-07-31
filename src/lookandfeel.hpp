@@ -12,7 +12,7 @@ namespace vmc {
 class LookAndFeel : public juce::LookAndFeel_V4
 {
 public:
-    LookAndFeel() = default;
+    LookAndFeel();
 
     void drawLinearSlider (juce::Graphics& g, int x, int y, int width, int height,
                            float sliderPos, float minSliderPos, float maxSliderPos,

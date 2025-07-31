@@ -1,7 +1,14 @@
 #include "lookandfeel.hpp"
 
+using namespace juce;
+
 namespace vmc
 {
+
+    LookAndFeel::LookAndFeel()
+    {
+        setColour (TextButton::buttonColourId, Colour::fromRGB (42, 42, 42));
+    }
 
     void LookAndFeel::drawLinearSlider(juce::Graphics &g, int x, int y, int width, int height,
                                        float sliderPos, float minSliderPos, float maxSliderPos,
@@ -152,7 +159,7 @@ namespace vmc
             // Button is toggled OFF - use buttonColourId if available  
             fillColour = button.findColour(juce::TextButton::buttonColourId, false);
             if (fillColour == juce::Colour())
-                fillColour = juce::Colour::fromRGB(42, 42, 42); // fallback gray
+                fillColour = juce::Colour::fromRGB(42, 42, 42); // fallback gray to match combo boxes
         }
         
         // Apply pressed state darkening

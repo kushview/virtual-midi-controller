@@ -150,6 +150,8 @@ namespace vmc
             {
                 auto dial = _dials.add(new CCDial(owner.controller));
                 addAndMakeVisible(dial);
+                dial->setName (String ("Control ") + String(i + 1));
+                dial->setTooltip (dial->getName());
                 dial->setControllerNumber(midiCC++);
                 dial->setMidiChannel(midiChannel);
             }
