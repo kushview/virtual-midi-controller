@@ -14,6 +14,8 @@ class Settings :  public ApplicationProperties
 public:
     static const char* lastMidiChannel;
     static const char* lastMidiProgram;
+    static constexpr const char* dialMidiCCs = "dialMidiCCs";
+    static constexpr const char* currentDrawer = "currentDrawer";
 
     Settings()
     {
@@ -49,6 +51,13 @@ public:
     {
         if (auto* props = getUserSettings())
             return props->getIntValue (key, defaultValue);
+        return defaultValue;
+    }
+
+    String getValue (const String& key, const String& defaultValue = "")
+    {
+        if (auto* props = getUserSettings())
+            return props->getValue (key, defaultValue);
         return defaultValue;
     }
 };

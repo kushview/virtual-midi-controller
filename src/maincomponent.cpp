@@ -155,9 +155,6 @@ namespace vmc
             }
 
             setSize(VMC_WIDTH, VMC_HEIGHT);
-
-            updateMidiOutputs();
-            updateWithSettings();
         }
 
         ~Content()
@@ -197,6 +194,20 @@ namespace vmc
                         break;
                     }
                 }
+            }
+
+            if (settings.getValue(Settings::currentDrawer) == "ccEditor")
+            {
+                // open drawer
+            }
+
+            auto ccs = StringArray::fromTokens (
+                settings.getValue (Settings::dialMidiCCs), ",", "\"");
+            ccs.trim();
+            ccs.removeEmptyStrings();
+            for (int i = 0; i < std::min (ccs.size(), (int) _dials.size()); ++i) {
+                auto* dial = _dials.getUnchecked (i);
+                dial->setControllerNumber (ccs[i].getIntValue());
             }
         }
 
@@ -289,6 +300,7 @@ namespace vmc
         }
 
     private:
+        friend class MainComponent;
         MainComponent &owner;
         VirtualKeyboard keyboard;
         Slider slider1, slider2, slider3;
@@ -331,16 +343,36 @@ namespace vmc
         addAndMakeVisible (overlay.get());
         overlay->onDismissed = [this]() {
             overlay->setVisible (! status.isUnlocked());
+            status.save();
             resized();
         };
         overlay->setVisible (! status.isUnlocked());
 
         // Set initial size to the base UI dimensions
         setSize(VMC_WIDTH, VMC_HEIGHT);
+
+        content->updateMidiOutputs();
+        content->updateWithSettings();
     }
 
     MainComponent::~MainComponent()
     {
+        auto& settings = controller.getSettings();
+
+        const auto midiCCStr = [this]() -> String {
+            StringArray out;
+            for (auto* dial : content->_dials) {
+                out.add (String (dial->controllerNumber()));
+            }
+            return out.joinIntoString (",");
+        }();
+
+        if (auto* props = settings.getUserSettings()) {
+            props->setValue (Settings::dialMidiCCs, midiCCStr);
+            props->setValue (Settings::currentDrawer, ccDrawer->isOpen() ? "ccEditor" : "");
+        }
+
+        status.save();
         ccDrawer.reset();
         content.reset();
         overlay.reset();
@@ -398,23 +430,13 @@ namespace vmc
                     // This is a simplified approach - in a real implementation you'd want
                     // a cleaner way to access these components
 
-                    // Add vertical sliders
-                    editor.addMapping("Slider 1", nullptr, MidiCCMapping::VerticalSlider);
-                    editor.addMapping("Slider 2", nullptr, MidiCCMapping::VerticalSlider);
-                    editor.addMapping("Slider 3", nullptr, MidiCCMapping::VerticalSlider);
-
                     // Add dials (we know there are 8 from the code)
-                    for (int i = 0; i < 8; ++i)
+                    for (auto* dial : content->_dials)
                     {
-                        editor.addMapping("Dial " + juce::String(i + 1), nullptr, MidiCCMapping::Dial);
+                        editor.addMapping (dial->getName(), dial, MidiCCMapping::Dial);
                     }
-
-                    // Add other controls
-                    editor.addMapping("Program", nullptr, MidiCCMapping::ProgramSlider);
-                    editor.addMapping("Channel", nullptr, MidiCCMapping::ChannelSlider);
                 }
             }
         }
     }
-
 }

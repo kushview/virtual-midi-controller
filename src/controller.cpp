@@ -127,6 +127,8 @@ namespace vmc
 
     void Controller::addMidiMessage(const MidiMessage msg)
     {
+        // std::cout << msg.getDescription() << std::endl;
+        
         if (impl->midiOut)
             impl->midiOut->sendMessageNow(msg);
         if (auto *const dout = impl->audioDeviceManager->getDefaultMidiOutput())

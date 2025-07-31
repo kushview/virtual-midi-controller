@@ -31,10 +31,12 @@ class CCDial : public juce::Slider {
 public:
     CCDial (Controller&);
 
+    constexpr int controllerNumber() const noexcept { return _cc; }
     void setControllerNumber (int ccNo) {
         _cc = juce::jlimit (0, 127, ccNo);
     }
 
+    constexpr int midiChannel() noexcept { return _channel; }
     void setMidiChannel (int ch) {
         _channel = juce::jlimit (1, 16, ch);
     }

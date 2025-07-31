@@ -2,7 +2,7 @@
 
 #include <kv/crypto/unlockstatus.hpp>
 
-#define VMC_PUBLIC_KEY "5,7a4ad6341657cebf63bbf185e8bf5c10f61ee54b35bbb585c743c6744f04471dc3ade56c52234bd9e107666aba32d21d8d4b64d2ebb94e924dd9fce990ebe9ac00c76d06d2746d66012c25d75022e2220b245f4e8fc36f4b48fd2f2e376114872343aa6f4ad83187524de872ed8ee9bf86425063473c954b7f46631229c56ee0e29750e5c3b37f58cacdee084b2282f5d9dee450d7a057eeb154da927efd06be0aadb2d56e54e9aa745cdc8b3599b9a062ea25f988a68e885ca35c380bb8cdbf128d55af57eb173c5c9ae57953655a12fee7c1db84c52cdb89d93695749fbab06625cb5db83f02b7f1bed41b1ae56e812f7af035b8e65d53c10085179f9fa3b1"
+#define VMC_PUBLIC_KEY "5,857c5bd1dd5cc4d913749d04df29d8ac6896031c0049681b918135cd813bf4e01e431945f8d29d1878476ec36bb5c467063950e7fba68cf3616dd46657f6be818f058e53812b23c4d0974a2c8f886f3d7d94b3aae684f9584eeed953ea27774c47be9b93b83a8118e89b748d65ed67658f7782cc27005b2023df25982c59114b13de14b958675ebc3e17d6bade45f1d7340cc88cefc2fa0f2aca4bab3bdff3f7c52e14c30f8df3b071889e406ff21b2367c3c251fb079249a3b13e7d79c137712d5aae47511daf0796aad220de6ba75721919e1dc15a109ec7cad4125f2854f5dd4f60d3731821d02c00bb49242c7c828f76e40ec2513e880ca7d1b1af2d0bdf"
 
 namespace vmc
 {
@@ -10,7 +10,7 @@ namespace vmc
     {
     public:
         UnlockStatus() = default;
-        juce::String getProductID() override { return juce::String(157); }
+        juce::String getProductID() override { return juce::String(159); }
         juce::RSAKey getPublicKey() override { return juce::RSAKey(VMC_PUBLIC_KEY); }
     };
 }

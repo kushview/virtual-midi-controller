@@ -3,6 +3,7 @@
     Copyright (c) 2019  Kushview, LLC.  All rights reserved.
 */
 
+#include "maincomponent.hpp"
 #include "midicceditor.hpp"
 #include "controller.hpp"
 
@@ -24,7 +25,7 @@ CCNumberEditor::CCNumberEditor()
     textEditor.setColour(juce::TextEditor::textColourId, juce::Colours::white.withAlpha(0.9f));
     textEditor.setColour(juce::TextEditor::outlineColourId, juce::Colours::white.withAlpha(0.2f));
     textEditor.setColour(juce::TextEditor::focusedOutlineColourId, juce::Colours::white.withAlpha(0.4f));
-    textEditor.setFont(juce::Font(11.0f));
+    textEditor.setFont(juce::Font(juce::FontOptions(11.0f)));
     
     textEditor.onReturnKey = [this]() { validateAndUpdate(); };
     textEditor.onEscapeKey = [this]() { 
@@ -169,22 +170,11 @@ void MidiCCEditor::addMapping(const juce::String& name, juce::Component* comp, M
     mapping.componentName = name;
     mapping.component = comp;
     mapping.type = type;
-    mapping.midiChannel = 1; // Default channel
+    mapping.midiChannel = 1;
+    mapping.ccNumber = 0;
     
-    // Set default CC numbers based on current hardcoded values
-    switch (type)
-    {
-        case MidiCCMapping::VerticalSlider:
-            if (mappings.size() == 0) mapping.ccNumber = 60;
-            else if (mappings.size() == 1) mapping.ccNumber = 61;
-            else if (mappings.size() == 2) mapping.ccNumber = 62;
-            break;
-        case MidiCCMapping::Dial:
-            mapping.ccNumber = 102 + (mappings.size() - 3); // Assuming 3 sliders come first
-            break;
-        default:
-            mapping.ccNumber = -1; // No default mapping
-            break;
+    if (auto* d = dynamic_cast<CCDial*> (comp)) {
+        mapping.ccNumber = d->controllerNumber();
     }
     
     mappings.add(mapping);
@@ -231,7 +221,7 @@ void MidiCCEditor::paintCell(juce::Graphics& g, int rowNumber, int columnId, int
     
     // Use white text with good contrast on aluminum background
     g.setColour(juce::Colours::white.withAlpha(0.85f));
-    g.setFont (juce::Font (juce::FontOptions (12.0f)));
+    g.setFont(juce::Font(juce::FontOptions(12.0f)));
     
     juce::String text;
     
@@ -274,8 +264,10 @@ void MidiCCEditor::setCCMapping(int row, int ccNumber)
 {
     if (row >= 0 && row < mappings.size())
     {
-        mappings.getReference(row).ccNumber = ccNumber;
-        // TODO: Update the actual component's CC mapping
+        auto& ref = mappings.getReference(row);
+        ref.ccNumber = ccNumber;
+        if (auto* d = dynamic_cast<CCDial*> (ref.component))
+            d->setControllerNumber (ccNumber);
     }
 }
 
