@@ -9,19 +9,20 @@ namespace vmc
 {
     struct Controller::Impl : public MidiKeyboardStateListener
     {
-        Impl() {}
+        Impl(Controller &c) : owner(c) {}
         ~Impl() {}
 
+        Controller &owner;
         Settings settings;
         OptionalScopedPointer<AudioDeviceManager> audioDeviceManager;
         std::unique_ptr<MidiOutput> midiOut;
         MidiKeyboardState keyboardState;
-        juce::String virtualDeviceName {"VMC-MIDI-Out"};
+        juce::String virtualDeviceName{"VMC-MIDI-Out"};
         void init()
         {
             audioDeviceManager.setOwned(new AudioDeviceManager());
 #if JUCE_MAC || JUCE_LINUX
-            midiOut = MidiOutput::createNewDevice (virtualDeviceName);
+            midiOut = MidiOutput::createNewDevice(virtualDeviceName);
             if (midiOut != nullptr)
                 midiOut->startBackgroundThread();
 #endif
@@ -30,24 +31,18 @@ namespace vmc
 
         void handleNoteOn(MidiKeyboardState *, int midiChannel, int midiNoteNumber, float velocity) override
         {
-            if (midiOut)
-                midiOut->sendMessageNow(MidiMessage::noteOn(midiChannel, midiNoteNumber, velocity));
-            if (auto *dout = audioDeviceManager->getDefaultMidiOutput())
-                dout->sendMessageNow(MidiMessage::noteOn(midiChannel, midiNoteNumber, velocity));
+            owner.addMidiMessage(MidiMessage::noteOn(midiChannel, midiNoteNumber, velocity));
         }
 
         void handleNoteOff(MidiKeyboardState *, int midiChannel, int midiNoteNumber, float velocity) override
         {
-            if (midiOut)
-                midiOut->sendMessageNow(MidiMessage::noteOff(midiChannel, midiNoteNumber, velocity));
-            if (auto *dout = audioDeviceManager->getDefaultMidiOutput())
-                dout->sendMessageNow(MidiMessage::noteOff(midiChannel, midiNoteNumber, velocity));
+            owner.addMidiMessage(MidiMessage::noteOff(midiChannel, midiNoteNumber, velocity));
         }
     };
 
     Controller::Controller()
     {
-        impl.reset(new Impl());
+        impl.reset(new Impl(*this));
         impl->init();
     }
 
@@ -127,7 +122,7 @@ namespace vmc
     void Controller::addMidiMessage(const MidiMessage msg)
     {
         // std::cout << msg.getDescription() << std::endl;
-        
+
         if (impl->midiOut)
             impl->midiOut->sendMessageNow(msg);
         if (auto *const dout = impl->audioDeviceManager->getDefaultMidiOutput())
