@@ -7,7 +7,6 @@
 
 namespace vmc
 {
-
     struct Controller::Impl : public MidiKeyboardStateListener
     {
         Impl() {}
