@@ -3,15 +3,30 @@
 
 A software MIDI controller which can send MIDI to any input device.  Also exposes itself as a MIDI input to other applications (OSX only)
 
-## Building with Projucer
-This is a JUCE project and should compile no problems by normal means.  However, the prefered method is to use Waf or VSCode.  See below.
+## Building with CMake
+This project uses CMake as its build system. You'll need CMake 3.22 or later.
 
-## Building with Waf
-Note: Open the `jucer/VMC.jucer` with Projucer and save it before doing this.  Generated files currently are not saved in Git.
-```
-./waf configure build
-```
-Run `./waf --help` for all options.
+### Prerequisites
+- CMake 3.22 or later
+- A C++17 compatible compiler
 
-## Building & Debugging with VSCode
-There are launch and build tasks ready to go in the `.vscode` folder.  You _should_ see them in the tasks dialog.
+### Build Steps
+1. Initialize submodules:
+   ```
+   git submodule update --init --recursive
+   ```
+
+2. Create a build directory and configure:
+   ```
+   mkdir build
+   cd build
+   cmake ..
+   ```
+
+3. Build the project:
+   ```
+   cmake --build .
+   ```
+
+## VSCode Support
+There are launch and build tasks in the `.vscode` folder, though these may need updating to use CMake instead of the previous build system.
