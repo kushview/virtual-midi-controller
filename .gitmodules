@@ -1,6 +1,3 @@
 [submodule "deps/JUCE"]
 	path = deps/JUCE
 	url = https://github.com/juce-framework/JUCE.git
-[submodule "deps/libkv-auth"]
-	path = deps/libkv-auth
-	url = https://github.com/kushview/libkv-auth.git
