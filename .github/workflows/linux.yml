@@ -36,23 +36,6 @@ jobs:
           libgtk-3-dev \
           pkg-config
           
-    - name: Handle missing submodules
-      run: |
-        # Manually download JUCE if submodule failed
-        if [ ! -f deps/JUCE/CMakeLists.txt ]; then
-          echo "JUCE submodule missing, downloading manually..."
-          rm -rf deps/JUCE
-          git clone https://github.com/juce-framework/JUCE.git deps/JUCE
-        fi
-        
-        # Create stub for libkv-auth if not available (private repo)
-        if [ ! -d deps/libkv-auth/include ]; then
-          echo "Creating libkv-auth stubs..."
-          mkdir -p deps/libkv-auth/include/kv/crypto
-          mkdir -p deps/libkv-auth/include/kv/ui
-          # Note: stub files should already be committed to the repo
-        fi
-          
     - name: Configure CMake
       run: |
         mkdir build
