@@ -2,6 +2,9 @@
 
 This is a JUCE-based cross-platform MIDI controller application written in C++17. When working on this project, please keep these guidelines in mind:
 
+## Git
+- Don't ever update submodules unless outlined in a github task.
+
 ## Project Structure
 - `src/` - Main application source code
 - `deps/` - Third-party dependencies (JUCE, libkv-auth, lua)
