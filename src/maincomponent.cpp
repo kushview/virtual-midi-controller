@@ -188,13 +188,21 @@ namespace vmc
             }
             else
             {
+                bool foundDevice = false;
                 for (int i = output.getNumItems(); --i >= 0;)
                 {
                     if (output.getItemText(i) == ID)
                     {
                         output.setSelectedItemIndex(i, dontSendNotification);
+                        foundDevice = true;
                         break;
                     }
+                }
+                
+                // If no matching device was found, default to "None"
+                if (!foundDevice)
+                {
+                    output.setSelectedItemIndex(0, dontSendNotification);
                 }
             }
 
