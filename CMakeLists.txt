@@ -17,10 +17,8 @@ juce_add_gui_app(virtual-midi-controller
 
 target_sources(virtual-midi-controller 
     PRIVATE
-        src/lualib.cpp
         src/settings.cpp
         src/controller.cpp
-        src/bindings.cpp
         src/main.cpp
         src/maincomponent.cpp
         src/lookandfeel.cpp
@@ -34,9 +32,9 @@ target_compile_definitions(virtual-midi-controller
         JUCE_USE_CURL=1
         JUCE_LOAD_CURL_SYMBOLS_LAZILY=1
         JUCE_VST3_CAN_REPLACE_VST2=0)
-target_include_directories(virtual-midi-controller PRIVATE 
-    src
-    deps/lua-5.3.5/src)
+target_include_directories(virtual-midi-controller
+    PRIVATE 
+        src)
 
 juce_add_binary_data(VMCData
     SOURCES
