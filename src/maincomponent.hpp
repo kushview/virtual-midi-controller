@@ -15,11 +15,11 @@
 
 // Base UI dimensions - the keyboard area should stay this size
 #ifndef VMC_WIDTH
-#define VMC_WIDTH 900
+    #define VMC_WIDTH 900
 #endif
 
 #ifndef VMC_HEIGHT
-#define VMC_HEIGHT 320
+    #define VMC_HEIGHT 320
 #endif
 
 namespace vmc {
@@ -32,12 +32,14 @@ public:
     CCDial (Controller&);
 
     constexpr int controllerNumber() const noexcept { return _cc; }
-    void setControllerNumber (int ccNo) {
+    void setControllerNumber (int ccNo)
+    {
         _cc = juce::jlimit (0, 127, ccNo);
     }
 
     constexpr int midiChannel() noexcept { return _channel; }
-    void setMidiChannel (int ch) {
+    void setMidiChannel (int ch)
+    {
         _channel = juce::jlimit (1, 16, ch);
     }
 
@@ -46,26 +48,26 @@ private:
     int _cc = 0, _channel = 1;
 };
 
-class MainComponent   : public Component
-{
+class MainComponent : public Component {
 public:
     MainComponent (Controller&);
     ~MainComponent();
 
     void paint (Graphics&) override;
     void resized() override;
-    
+
     void toggleCCEditor();
-    
+
 private:
     Controller& controller;
-    friend class Content; class Content;
+    friend class Content;
+    class Content;
     std::unique_ptr<Content> content;
     std::unique_ptr<MidiCCDrawer> ccDrawer;
     UnlockStatus status;
     std::unique_ptr<kv::UnlockOverlay> overlay;
-    
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
 
-}
+} // namespace vmc

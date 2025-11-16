@@ -11,8 +11,7 @@
 namespace vmc {
 
 class Controller final : public AudioIODeviceCallback,
-                         public MidiInputCallback
-{
+                         public MidiInputCallback {
 public:
     Controller();
     ~Controller();
@@ -28,17 +27,17 @@ public:
     //=========================================================================
     static File getUserDataPath();
     static File getSamplesPath();
-    
+
     //=========================================================================
     AudioDeviceManager& getDeviceManager();
 
     //=========================================================================
     void audioDeviceIOCallbackWithContext (const float* const* inputChannelData,
-        int numInputChannels,
-        float* const* outputChannelData,
-        int numOutputChannels,
-        int numSamples,
-        const AudioIODeviceCallbackContext& context) override;
+                                           int numInputChannels,
+                                           float* const* outputChannelData,
+                                           int numOutputChannels,
+                                           int numSamples,
+                                           const AudioIODeviceCallbackContext& context) override;
     void audioDeviceAboutToStart (AudioIODevice* device) override;
     void audioDeviceStopped() override;
     void audioDeviceError (const String& errorMessage) override;
@@ -49,7 +48,8 @@ public:
                                             int, double) override {}
 
 private:
-    struct Impl; std::unique_ptr<Impl> impl;
+    struct Impl;
+    std::unique_ptr<Impl> impl;
 
     //=========================================================================
     friend class Application;
@@ -57,4 +57,4 @@ private:
     void shutdown();
 };
 
-}
+} // namespace vmc

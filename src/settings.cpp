@@ -7,7 +7,7 @@
 
 namespace vmc {
 
-const char* Settings::lastMidiChannel       = "lastMidiChannel";
-const char* Settings::lastMidiProgram       = "lastMidiProgram";
+const char* Settings::lastMidiChannel = "lastMidiChannel";
+const char* Settings::lastMidiProgram = "lastMidiProgram";
 
-}
+} // namespace vmc

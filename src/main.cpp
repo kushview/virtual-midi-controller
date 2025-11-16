@@ -10,135 +10,128 @@
 #include "lookandfeel.hpp"
 #include "controller.hpp"
 
-namespace vmc
-{
-    class Application : public JUCEApplication
+namespace vmc {
+class Application : public JUCEApplication {
+public:
+    Application() {}
+
+    const String getApplicationName() override { return "Virtual MIDI Controller"; }
+    const String getApplicationVersion() override { return "1.0.0"; }
+    bool moreThanOneInstanceAllowed() override { return false; }
+
+    void initialise (const String& commandLine) override
     {
+        ignoreUnused (commandLine);
+        setupGlobals();
+        LookAndFeel::setDefaultLookAndFeel (&look);
+        mainWindow.reset (new MainWindow (getApplicationName(), *controller));
+        tooltipWindow.reset (new TooltipWindow (mainWindow.get()));
+    }
+
+    void shutdown() override
+    {
+        shutdownGui();
+
+        controller->saveSettings();
+        controller->shutdown();
+        controller.reset();
+    }
+
+    void systemRequestedQuit() override
+    {
+        quit();
+    }
+
+    void anotherInstanceStarted (const String& commandLine) override
+    {
+        ignoreUnused (commandLine);
+    }
+
+    class MainWindow : public DocumentWindow {
     public:
-        Application() {}
-
-        const String getApplicationName() override { return "Virtual MIDI Controller"; }
-        const String getApplicationVersion() override { return "1.0.0"; }
-        bool moreThanOneInstanceAllowed() override { return false; }
-
-        void initialise(const String &commandLine) override
+        MainWindow (String name, Controller& vc)
+            : DocumentWindow (name, Desktop::getInstance().getDefaultLookAndFeel().findColour (ResizableWindow::backgroundColourId),
+                              DocumentWindow::closeButton | DocumentWindow::minimiseButton),
+              controller (vc)
         {
-            ignoreUnused(commandLine);
-            setupGlobals();
-            LookAndFeel::setDefaultLookAndFeel(&look);
-            mainWindow.reset(new MainWindow(getApplicationName(), *controller));
-            tooltipWindow.reset(new TooltipWindow (mainWindow.get()));
-        }
-
-        void shutdown() override
-        {
-            shutdownGui();
-           
-            controller->saveSettings();
-            controller->shutdown();
-            controller.reset();
-        }
-
-        void systemRequestedQuit() override
-        {
-            quit();
-        }
-
-        void anotherInstanceStarted(const String &commandLine) override
-        {
-            ignoreUnused(commandLine);
-        }
-
-        class MainWindow : public DocumentWindow
-        {
-        public:
-            MainWindow(String name, Controller &vc)
-                : DocumentWindow(name, Desktop::getInstance().getDefaultLookAndFeel().findColour(ResizableWindow::backgroundColourId), 
-                    DocumentWindow::closeButton | DocumentWindow::minimiseButton ),
-                  controller(vc)
-            {
 #if JUCE_LINUX
-                setUsingNativeTitleBar(false);
+            setUsingNativeTitleBar (false);
 #else
-                setUsingNativeTitleBar(true);
+            setUsingNativeTitleBar (true);
 #endif
-                setContentOwned(new MainComponent(vc), true);
+            setContentOwned (new MainComponent (vc), true);
 
-                if (auto *props = controller.getSettings().getUserSettings())
-                {
-                    const auto state = props->getValue("windowPosition", String());
-                    if (state.isNotEmpty())
-                        restoreWindowStateFromString(state);
-                }
-
-                setSize(VMC_WIDTH, VMC_HEIGHT);
-                setContentComponentSize(VMC_WIDTH, VMC_HEIGHT);
-                setResizable(false, false);
-
-                setVisible(true);
+            if (auto* props = controller.getSettings().getUserSettings()) {
+                const auto state = props->getValue ("windowPosition", String());
+                if (state.isNotEmpty())
+                    restoreWindowStateFromString (state);
             }
 
-            ~MainWindow() override
-            {
-                clearContentComponent();
-                setConstrainer(nullptr);
+            setSize (VMC_WIDTH, VMC_HEIGHT);
+            setContentComponentSize (VMC_WIDTH, VMC_HEIGHT);
+            setResizable (false, false);
+
+            setVisible (true);
+        }
+
+        ~MainWindow() override
+        {
+            clearContentComponent();
+            setConstrainer (nullptr);
+        }
+
+        void savePersistentData()
+        {
+            if (auto* props = controller.getSettings().getUserSettings()) {
+                props->setValue ("windowPosition", getWindowStateAsString());
             }
 
-            void savePersistentData()
-            {
-                if (auto *props = controller.getSettings().getUserSettings())
-                {
-                    props->setValue("windowPosition", getWindowStateAsString());
-                }
-
-                if (auto *const comp = dynamic_cast<MainComponent *>(getContentComponent()))
-                {
-                }
+            if (auto* const comp = dynamic_cast<MainComponent*> (getContentComponent())) {
             }
+        }
 
-            void closeButtonPressed() override
-            {
-                JUCEApplication::getInstance()->systemRequestedQuit();
-            }
+        void closeButtonPressed() override
+        {
+            JUCEApplication::getInstance()->systemRequestedQuit();
+        }
 
-            void maximiseButtonPressed() override
-            {
-                return;
-            }
-
-        private:
-            Controller &controller;
-            ComponentBoundsConstrainer constrain;
-            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainWindow)
-        };
+        void maximiseButtonPressed() override
+        {
+            return;
+        }
 
     private:
-        vmc::LookAndFeel look;
-        std::unique_ptr<MainWindow> mainWindow;
-        std::unique_ptr<Controller> controller;
-        std::unique_ptr<TooltipWindow> tooltipWindow; // Add TooltipWindow instance
-
-        void setupGlobals()
-        {
-            controller.reset(new Controller());
-            controller->initializeAudioDevice();
-        }
-
-        void shutdownGui()
-        {
-            tooltipWindow = nullptr; // Clean up the tooltip window
-            if (mainWindow != nullptr)
-            {
-                mainWindow->savePersistentData();
-                mainWindow = nullptr;
-            }
-
-            LookAndFeel::setDefaultLookAndFeel(nullptr);
-        }
+        Controller& controller;
+        ComponentBoundsConstrainer constrain;
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainWindow)
     };
-}
 
-START_JUCE_APPLICATION(vmc::Application)
+private:
+    vmc::LookAndFeel look;
+    std::unique_ptr<MainWindow> mainWindow;
+    std::unique_ptr<Controller> controller;
+    std::unique_ptr<TooltipWindow> tooltipWindow; // Add TooltipWindow instance
+
+    void setupGlobals()
+    {
+        controller.reset (new Controller());
+        controller->initializeAudioDevice();
+    }
+
+    void shutdownGui()
+    {
+        tooltipWindow = nullptr; // Clean up the tooltip window
+        if (mainWindow != nullptr) {
+            mainWindow->savePersistentData();
+            mainWindow = nullptr;
+        }
+
+        LookAndFeel::setDefaultLookAndFeel (nullptr);
+    }
+};
+} // namespace vmc
+
+START_JUCE_APPLICATION (vmc::Application)
 
 // .hxx includes
 #include <kv/ui/unlockform.hxx>
