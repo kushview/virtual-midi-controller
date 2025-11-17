@@ -19,6 +19,7 @@ target_sources(virtual-midi-controller
     PRIVATE
         src/settings.cpp
         src/controller.cpp
+        src/device.cpp
         src/main.cpp
         src/maincomponent.cpp
         src/lookandfeel.cpp
