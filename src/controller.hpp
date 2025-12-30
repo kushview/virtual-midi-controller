@@ -20,8 +20,6 @@ public:
 
     Device device() const;
 
-    void open (const juce::File&);
-
     //=========================================================================
     Settings& getSettings();
     void saveSettings();
