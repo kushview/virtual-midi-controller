@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project("Virtual MIDI Controller")
-set(PROJECT_VERSION 1.0.0)
+project("virtual-midi-controller" VERSION 1.0.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -32,7 +31,8 @@ target_compile_definitions(virtual-midi-controller
         JUCE_WEB_BROWSER=0
         JUCE_USE_CURL=1
         JUCE_LOAD_CURL_SYMBOLS_LAZILY=1
-        JUCE_VST3_CAN_REPLACE_VST2=0)
+        JUCE_VST3_CAN_REPLACE_VST2=0
+        VMC_VERSION_STRING=\"${PROJECT_VERSION}\")
 target_include_directories(virtual-midi-controller
     PRIVATE 
         src)

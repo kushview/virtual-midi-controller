@@ -25,7 +25,7 @@ public:
     Application() {}
 
     const String getApplicationName() override { return "Virtual MIDI Controller"; }
-    const String getApplicationVersion() override { return "1.0.0"; }
+    const String getApplicationVersion() override { return VMC_VERSION_STRING; }
     bool moreThanOneInstanceAllowed() override { return false; }
 
     void initialise (const String& commandLine) override
