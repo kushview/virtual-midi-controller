@@ -91,7 +91,7 @@ public:
         ccEditorButton.setColour (juce::TextButton::buttonOnColourId, juce::Colour::fromRGB (64, 160, 255));
 
         ccEditorButton.onClick = [this]() {
-            owner.toggleCCEditor();
+            owner.toggleDrawer();
         };
 
         addAndMakeVisible (program);
@@ -190,7 +190,7 @@ public:
             juce::Timer::callAfterDelay (14, [ptr] {
                 if (ptr && ptr.getComponent() != nullptr)
                     if (ptr->ccDrawer != nullptr && ! ptr->ccDrawer->isOpen())
-                        ptr->toggleCCEditor();
+                        ptr->toggleDrawer();
             });
         }
 
@@ -287,6 +287,13 @@ public:
             output.addItem (info.name, 1000 + index);
     }
 
+    void setDevice (const Device& newDev)
+    {
+        if (device == newDev)
+            return;
+        device = newDev;
+    }
+
 private:
     friend class MainComponent;
     MainComponent& owner;
@@ -295,6 +302,7 @@ private:
     Slider program, channel;
     ComboBox output;
     juce::TextButton ccEditorButton;
+    Device device;
 
     juce::OwnedArray<CCDial> _dials;
     juce::Array<juce::MidiDeviceInfo> _devices;
@@ -327,13 +335,13 @@ MainComponent::MainComponent (Controller& vc)
     };
 
     overlay = std::make_unique<kv::UnlockOverlay> (status, TRANS ("Unlock Virtual MIDI Keyboard"));
-    addAndMakeVisible (overlay.get());
+    // addAndMakeVisible (overlay.get());
     overlay->onDismissed = [this]() {
         overlay->setVisible (! status.isUnlocked());
         status.save();
         resized();
     };
-    overlay->setVisible (! status.isUnlocked());
+    // overlay->setVisible (! status.isUnlocked());
 
     // Set initial size to the base UI dimensions
     setSize (VMC_WIDTH, VMC_HEIGHT);
@@ -393,7 +401,17 @@ void MainComponent::resized()
     }
 }
 
-void MainComponent::toggleCCEditor()
+Device MainComponent::device() const
+{
+    return content->device;
+}
+
+void MainComponent::setDevice (const Device& newDevice)
+{
+    content->setDevice (newDevice);
+}
+
+void MainComponent::toggleDrawer()
 {
     if (ccDrawer) {
         ccDrawer->toggleDrawer();

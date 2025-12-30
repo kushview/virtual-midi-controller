@@ -10,6 +10,7 @@
 
 #include <kv/ui/unlockoverlay.hpp>
 
+#include "device.hpp"
 #include "unlock.hpp"
 #include "midicceditor.hpp"
 
@@ -53,10 +54,13 @@ public:
     MainComponent (Controller&);
     ~MainComponent();
 
+    void toggleDrawer();
+
+    Device device() const;
+    void setDevice (const Device& newDevice);
+
     void paint (Graphics&) override;
     void resized() override;
-
-    void toggleCCEditor();
 
 private:
     Controller& controller;

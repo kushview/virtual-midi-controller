@@ -6,6 +6,7 @@
 #include "juce.hpp"
 #include <juce_events/juce_events.h>
 
+#include "device.hpp"
 #include "maincomponent.hpp"
 #include "lookandfeel.hpp"
 #include "controller.hpp"
@@ -26,6 +27,9 @@ public:
         LookAndFeel::setDefaultLookAndFeel (&look);
         mainWindow.reset (new MainWindow (getApplicationName(), *controller));
         tooltipWindow.reset (new TooltipWindow (mainWindow.get()));
+
+        Device dev;
+        std::cout << dev.toXmlString() << std::endl;
     }
 
     void shutdown() override
