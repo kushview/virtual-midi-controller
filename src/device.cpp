@@ -38,29 +38,33 @@ Device::~Device()
     _undo = nullptr;
 }
 
-bool Device::load (const juce::File& xml) {
+bool Device::load (const juce::File& xml)
+{
     ValueTree newData;
     if (auto xmlElement = juce::XmlDocument::parse (xml))
         newData = juce::ValueTree::fromXml (*xmlElement);
     if (newData.isValid()) {
-        _data.removeAllProperties(nullptr);
-        _data.removeAllChildren(nullptr);
-        _data.copyPropertiesAndChildrenFrom(newData, nullptr);
+        _data.removeAllProperties (nullptr);
+        _data.removeAllChildren (nullptr);
+        _data.copyPropertiesAndChildrenFrom (newData, nullptr);
         return true;
     }
     return false;
 }
 
-void Device::save (const juce::File& file) const {
+void Device::save (const juce::File& file) const
+{
     if (auto xml = _data.createXml())
         xml->writeTo (file);
 }
 
-void Device::setMidiChannel (int newChannel) {
+void Device::setMidiChannel (int newChannel)
+{
     _data.setProperty (midiChannelID, juce::jlimit (1, 16, newChannel), _undo);
 }
 
-void Device::setMidiProgram (int newProgram) {
+void Device::setMidiProgram (int newProgram)
+{
     _data.setProperty (midiProgramID, juce::jlimit (1, 128, newProgram), _undo);
 }
 

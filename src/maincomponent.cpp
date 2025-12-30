@@ -94,6 +94,18 @@ public:
             owner.toggleDrawer();
         };
 
+        addAndMakeVisible (saveButton);
+        saveButton.setButtonText ("Save");
+        saveButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white.withAlpha (0.8f));
+        saveButton.setColour (juce::TextButton::textColourOnId, juce::Colours::white);
+        saveButton.onClick = [this]() { saveDevice(); };
+
+        addAndMakeVisible (loadButton);
+        loadButton.setButtonText ("Load");
+        loadButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white.withAlpha (0.8f));
+        loadButton.setColour (juce::TextButton::textColourOnId, juce::Colours::white);
+        loadButton.onClick = [this]() { loadDevice(); };
+
         addAndMakeVisible (program);
         detail::styleIncDecSlider (program);
         program.setTooltip ("MIDI Program");
@@ -242,6 +254,9 @@ public:
         r2.removeFromLeft (10); // Small gap
         ccEditorButton.setBounds (r2.removeFromLeft (80));
         output.setBounds (r2.removeFromRight (140));
+        r2.removeFromRight (5); // Gap before output
+        loadButton.setBounds (r2.removeFromRight (70));
+        saveButton.setBounds (r2.removeFromRight (70));
 
         auto r3 = r.removeFromBottom (180);
         slider1.setBounds (r3.removeFromLeft (30));
@@ -309,6 +324,57 @@ public:
         }
     }
 
+    void saveDevice()
+    {
+        auto suggestedFile = Controller::getUserDataPath().getChildFile (device.name() + ".vmc");
+        fileChooser = std::make_unique<juce::FileChooser> (
+            "Save Device",
+            suggestedFile,
+            "*.vmc",
+            true);
+
+        fileChooser->launchAsync (
+            juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::warnAboutOverwriting,
+            [this] (const juce::FileChooser& fc) {
+                auto file = fc.getResult();
+                if (file == juce::File())
+                    return;
+
+                auto fileWithExt = file.hasFileExtension (".vmc") ? file : file.withFileExtension (".vmc");
+                device.save (fileWithExt);
+            });
+    }
+
+    void loadDevice()
+    {
+        fileChooser = std::make_unique<juce::FileChooser> (
+            "Load Device",
+            Controller::getUserDataPath(),
+            "*.vmc",
+            true);
+
+        fileChooser->launchAsync (
+            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+            [this] (const juce::FileChooser& fc) {
+                auto file = fc.getResult();
+                if (file == juce::File())
+                    return;
+
+                Device tempDevice;
+                if (tempDevice.load (file)) {
+                    setDevice (tempDevice);
+                } else {
+                    auto options = juce::MessageBoxOptions::makeOptionsOk (
+                        juce::MessageBoxIconType::WarningIcon,
+                        "Load Failed",
+                        "Could not load device from file.",
+                        {},
+                        this);
+                    juce::AlertWindow::showAsync (options, nullptr);
+                }
+            });
+    }
+
 private:
     friend class MainComponent;
     MainComponent& owner;
@@ -317,6 +383,9 @@ private:
     Slider program, channel;
     ComboBox output;
     juce::TextButton ccEditorButton;
+    juce::TextButton saveButton;
+    juce::TextButton loadButton;
+    std::unique_ptr<juce::FileChooser> fileChooser;
     Device device;
     juce::Value midiChannelValue;
     juce::Value midiProgramValue;
@@ -362,11 +431,10 @@ MainComponent::MainComponent (Controller& vc)
     };
     // overlay->setVisible (! status.isUnlocked());
 
-
     // Set initial size to the base UI dimensions
     setSize (VMC_WIDTH, VMC_HEIGHT);
 
-    Timer::callAfterDelay(50, [this]() {
+    Timer::callAfterDelay (50, [this]() {
         content->updateMidiOutputs();
         content->updateWithSettings();
         content->setDevice (controller.device());

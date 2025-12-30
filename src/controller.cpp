@@ -113,7 +113,8 @@ File Controller::getSamplesPath()
 
 MidiKeyboardState& Controller::getMidiKeyboardState() { return impl->keyboardState; }
 
-Device Controller::device() const {
+Device Controller::device() const
+{
     return impl->device;
 }
 

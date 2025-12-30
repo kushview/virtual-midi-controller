@@ -60,7 +60,7 @@ public:
     /** Returns the name of the device. */
     juce::String name() const noexcept { return _data.getProperty (nameID, juce::String()).toString(); }
     void setName (std::string_view newName) { _data.setProperty (nameID, newName.data(), _undo); }
-    
+
     /** Returns the MIDI channel of the device. */
     int midiChannel() const noexcept { return _data.getProperty (midiChannelID, 0); }
     void setMidiChannel (int newChannel);
@@ -75,12 +75,13 @@ public:
     juce::Value propertyAsValue (const juce::Identifier& ID) { return _data.getPropertyAsValue (ID, _undo); }
 
     juce::ValueTree dials() const noexcept { return _data.getChildWithName (dialsID); }
-    
+
     juce::ValueTree faders() const noexcept { return _data.getChildWithName (fadersID); }
 
     juce::String toXmlString() const { return _data.toXmlString(); }
 
-    void setUndoManager (juce::UndoManager* undo) {
+    void setUndoManager (juce::UndoManager* undo)
+    {
         _undo = undo;
     }
 

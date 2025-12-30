@@ -32,13 +32,13 @@ public:
     {
         ignoreUnused (commandLine);
         setupGlobals();
-        
+
         auto testFile { detail::testFile() };
         if (testFile.existsAsFile()) {
             auto dev = controller->device();
             dev.load (testFile);
         }
-        
+
         LookAndFeel::setDefaultLookAndFeel (&look);
         mainWindow.reset (new MainWindow (getApplicationName(), *controller));
         tooltipWindow.reset (new TooltipWindow (mainWindow.get()));
@@ -50,7 +50,7 @@ public:
         device.save (detail::testFile());
 
         shutdownGui();
-        
+
         controller->saveSettings();
         controller->shutdown();
         controller.reset();

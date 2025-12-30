@@ -17,11 +17,11 @@ class Controller final : public AudioIODeviceCallback,
 public:
     Controller();
     ~Controller();
-    
+
     Device device() const;
 
     void open (const juce::File&);
-    
+
     //=========================================================================
     Settings& getSettings();
     void saveSettings();
