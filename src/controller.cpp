@@ -4,6 +4,7 @@
 */
 
 #include "controller.hpp"
+#include "device.hpp"
 
 namespace vmc {
 struct Controller::Impl : public MidiKeyboardStateListener {
@@ -16,6 +17,8 @@ struct Controller::Impl : public MidiKeyboardStateListener {
     std::unique_ptr<MidiOutput> midiOut;
     MidiKeyboardState keyboardState;
     juce::String virtualDeviceName { "VMC-MIDI-Out" };
+    Device device;
+
     void init()
     {
         audioDeviceManager.setOwned (new AudioDeviceManager());
@@ -109,6 +112,11 @@ File Controller::getSamplesPath()
 }
 
 MidiKeyboardState& Controller::getMidiKeyboardState() { return impl->keyboardState; }
+
+Device Controller::device() const {
+    return impl->device;
+}
+
 Settings& Controller::getSettings() { return impl->settings; }
 AudioDeviceManager& Controller::getDeviceManager() { return *impl->audioDeviceManager; }
 

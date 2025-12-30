@@ -33,19 +33,15 @@ public:
 
     Device& operator= (const Device& o)
     {
-        if (this != &o) {
-            _data = o._data;
-            _undo = o._undo;
-        }
+        _data = o._data;
+        _undo = o._undo;
         return *this;
     }
 
     Device& operator= (Device&& o) noexcept
     {
-        if (this != &o) {
-            _data = std::move (o._data);
-            _undo = std::move (o._undo);
-        }
+        _data = std::move (o._data);
+        _undo = std::move (o._undo);
         return *this;
     }
 
@@ -59,12 +55,19 @@ public:
         return ! (*this == o);
     }
 
+    bool isValid() const noexcept { return _data.isValid(); }
+
     /** Returns the name of the device. */
     juce::String name() const noexcept { return _data.getProperty (nameID, juce::String()).toString(); }
+    void setName (std::string_view newName) { _data.setProperty (nameID, newName.data(), _undo); }
+    
     /** Returns the MIDI channel of the device. */
     int midiChannel() const noexcept { return _data.getProperty (midiChannelID, 0); }
+    void setMidiChannel (int newChannel);
+
     /** Returns the MIDI program of the device. */
     int midiProgram() const noexcept { return _data.getProperty (midiProgramID, 0); }
+    void setMidiProgram (int newProgram);
 
     /** Returns the underlying ValueTree data for this device. */
     const auto& data() const noexcept { return _data; }
@@ -72,10 +75,17 @@ public:
     juce::Value propertyAsValue (const juce::Identifier& ID) { return _data.getPropertyAsValue (ID, _undo); }
 
     juce::ValueTree dials() const noexcept { return _data.getChildWithName (dialsID); }
-
+    
     juce::ValueTree faders() const noexcept { return _data.getChildWithName (fadersID); }
 
     juce::String toXmlString() const { return _data.toXmlString(); }
+
+    void setUndoManager (juce::UndoManager* undo) {
+        _undo = undo;
+    }
+
+    bool load (const juce::File&);
+    void save (const juce::File&) const;
 
 private:
     juce::ValueTree _data { "Device" };

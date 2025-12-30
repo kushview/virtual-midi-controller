@@ -159,13 +159,6 @@ public:
     {
         auto& settings = owner.controller.getSettings();
 
-        midiChannel = settings.getInt (Settings::lastMidiChannel, 1);
-        channel.setValue ((double) midiChannel, dontSendNotification);
-        program.setValue (1.0 + (double) settings.getInt (Settings::lastMidiProgram, 0), dontSendNotification);
-        for (auto* dial : _dials) {
-            dial->setMidiChannel (midiChannel);
-        }
-
         const String ID = owner.controller.getDeviceManager().getDefaultMidiOutputIdentifier();
         if (ID.isEmpty()) {
             output.setSelectedItemIndex (0, dontSendNotification);
@@ -192,15 +185,6 @@ public:
                     if (ptr->ccDrawer != nullptr && ! ptr->ccDrawer->isOpen())
                         ptr->toggleDrawer();
             });
-        }
-
-        auto ccs = StringArray::fromTokens (
-            settings.getValue (Settings::dialMidiCCs), ",", "\"");
-        ccs.trim();
-        ccs.removeEmptyStrings();
-        for (int i = 0; i < std::min (ccs.size(), (int) _dials.size()); ++i) {
-            auto* dial = _dials.getUnchecked (i);
-            dial->setControllerNumber (ccs[i].getIntValue());
         }
     }
 
@@ -292,6 +276,37 @@ public:
         if (device == newDev)
             return;
         device = newDev;
+        if (device.isValid()) {
+            midiChannelValue = device.propertyAsValue (Device::midiChannelID);
+            midiProgramValue = device.propertyAsValue (Device::midiProgramID);
+            channel.getValueObject().referTo (midiChannelValue);
+            program.getValueObject().referTo (midiProgramValue);
+
+            if (dialValues.size() != (size_t) _dials.size())
+                dialValues.resize (_dials.size());
+
+            const auto dialsTree = device.dials();
+            for (int i = 0; i < _dials.size(); ++i) {
+                auto child = dialsTree.getChild (i);
+                if (child.isValid()) {
+                    dialValues[(size_t) i] = child.getPropertyAsValue ("value", nullptr);
+                    _dials.getUnchecked (i)->getValueObject().referTo (dialValues[(size_t) i]);
+                }
+            }
+
+            if (faderValues.size() != 3u)
+                faderValues.resize (3u);
+
+            juce::Slider* faders[] = { &slider1, &slider2, &slider3 };
+            const auto fadersTree = device.faders();
+            for (int i = 0; i < 3; ++i) {
+                auto child = fadersTree.getChild (i);
+                if (child.isValid()) {
+                    faderValues[(size_t) i] = child.getPropertyAsValue ("value", nullptr);
+                    faders[i]->getValueObject().referTo (faderValues[(size_t) i]);
+                }
+            }
+        }
     }
 
 private:
@@ -303,6 +318,10 @@ private:
     ComboBox output;
     juce::TextButton ccEditorButton;
     Device device;
+    juce::Value midiChannelValue;
+    juce::Value midiProgramValue;
+    std::vector<juce::Value> dialValues;
+    std::vector<juce::Value> faderValues;
 
     juce::OwnedArray<CCDial> _dials;
     juce::Array<juce::MidiDeviceInfo> _devices;
@@ -343,11 +362,15 @@ MainComponent::MainComponent (Controller& vc)
     };
     // overlay->setVisible (! status.isUnlocked());
 
+
     // Set initial size to the base UI dimensions
     setSize (VMC_WIDTH, VMC_HEIGHT);
 
-    content->updateMidiOutputs();
-    content->updateWithSettings();
+    Timer::callAfterDelay(50, [this]() {
+        content->updateMidiOutputs();
+        content->updateWithSettings();
+        content->setDevice (controller.device());
+    });
 }
 
 MainComponent::~MainComponent()

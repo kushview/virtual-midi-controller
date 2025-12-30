@@ -10,12 +10,18 @@
 
 namespace vmc {
 
+class Device;
+
 class Controller final : public AudioIODeviceCallback,
                          public MidiInputCallback {
 public:
     Controller();
     ~Controller();
+    
+    Device device() const;
 
+    void open (const juce::File&);
+    
     //=========================================================================
     Settings& getSettings();
     void saveSettings();
