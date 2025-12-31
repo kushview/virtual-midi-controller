@@ -110,7 +110,9 @@ public:
 
         void deviceChanged() override
         {
-            auto name = controller.deviceFile().getFileNameWithoutExtension();
+            auto name = controller.device().name().trim();
+            if (name.isEmpty())
+                name = controller.deviceFile().getFileNameWithoutExtension();
             setName ("Virtual MIDI Controller - " + name);
         }
 
