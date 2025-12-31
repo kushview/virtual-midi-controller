@@ -46,5 +46,4 @@ target_link_libraries(virtual-midi-controller PRIVATE
     juce_gui_basics 
     juce_audio_devices
     juce_audio_utils
-    juce_product_unlocking
     VMCData)

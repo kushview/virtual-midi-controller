@@ -404,8 +404,6 @@ private:
 MainComponent::MainComponent (Controller& vc)
     : controller (vc)
 {
-    status.load();
-
     setOpaque (true);
     content.reset (new Content (*this));
     addAndMakeVisible (content.get());
@@ -421,15 +419,6 @@ MainComponent::MainComponent (Controller& vc)
         int totalHeight = VMC_HEIGHT + drawerHeight;
         setSize (VMC_WIDTH, totalHeight);
     };
-
-    overlay = std::make_unique<kv::UnlockOverlay> (status, TRANS ("Unlock Virtual MIDI Keyboard"));
-    // addAndMakeVisible (overlay.get());
-    overlay->onDismissed = [this]() {
-        overlay->setVisible (! status.isUnlocked());
-        status.save();
-        resized();
-    };
-    // overlay->setVisible (! status.isUnlocked());
 
     // Set initial size to the base UI dimensions
     setSize (VMC_WIDTH, VMC_HEIGHT);
@@ -458,10 +447,8 @@ MainComponent::~MainComponent()
         props->setValue (Settings::currentDrawer, ccDrawer->isOpen() ? "ccEditor" : "");
     }
 
-    status.save();
     ccDrawer.reset();
     content.reset();
-    overlay.reset();
 }
 
 void MainComponent::paint (Graphics& g)
@@ -485,10 +472,6 @@ void MainComponent::resized()
             // Position the drawer even when closed (height 0)
             ccDrawer->setBounds (bounds.getX(), contentBounds.getBottom(), bounds.getWidth(), 0);
         }
-    }
-
-    if (overlay != nullptr && overlay->isVisible()) {
-        overlay->setBounds (getLocalBounds());
     }
 }
 

@@ -8,8 +8,6 @@
 #include "juce.hpp"
 #include <juce_gui_basics/juce_gui_basics.h>
 
-#include <kv/ui/unlockoverlay.hpp>
-
 #include "device.hpp"
 #include "unlock.hpp"
 #include "midicceditor.hpp"
@@ -68,8 +66,6 @@ private:
     class Content;
     std::unique_ptr<Content> content;
     std::unique_ptr<MidiCCDrawer> ccDrawer;
-    UnlockStatus status;
-    std::unique_ptr<kv::UnlockOverlay> overlay;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
