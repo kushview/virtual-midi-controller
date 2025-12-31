@@ -113,7 +113,7 @@ public:
             auto name = controller.device().name().trim();
             if (name.isEmpty())
                 name = controller.deviceFile().getFileNameWithoutExtension();
-            setName ("Virtual MIDI Controller - " + name);
+            setName ("VMC: " + name);
         }
 
     private:
