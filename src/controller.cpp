@@ -22,6 +22,7 @@ struct Controller::Impl : public MidiKeyboardStateListener {
     juce::String virtualDeviceName { "VMC-MIDI-Out" };
     Device device;
     juce::File deviceFile;
+    ListenerList<Controller::Listener> listeners;
 
     void saveSettings()
     {
@@ -53,6 +54,7 @@ struct Controller::Impl : public MidiKeyboardStateListener {
     {
         if (device.load (file)) {
             deviceFile = file;
+            listeners.call (&Controller::Listener::deviceChanged);
             return true;
         }
         return false;
@@ -179,5 +181,8 @@ void Controller::audioDeviceIOCallbackWithContext (const float* const* inputChan
 void Controller::audioDeviceAboutToStart (AudioIODevice*) {}
 void Controller::audioDeviceStopped() {}
 void Controller::audioDeviceError (const String& errorMessage) { juce::ignoreUnused (errorMessage); }
+
+void Controller::addListener (Listener* listener) { impl->listeners.add (listener); }
+void Controller::removeListener (Listener* listener) { impl->listeners.remove (listener); }
 
 } // namespace vmc

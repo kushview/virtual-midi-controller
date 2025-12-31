@@ -57,13 +57,15 @@ public:
         ignoreUnused (commandLine);
     }
 
-    class MainWindow : public DocumentWindow {
+    class MainWindow : public DocumentWindow,
+                        public Controller::Listener {
     public:
         MainWindow (String name, Controller& vc)
             : DocumentWindow (name, Desktop::getInstance().getDefaultLookAndFeel().findColour (ResizableWindow::backgroundColourId),
                               DocumentWindow::closeButton | DocumentWindow::minimiseButton),
               controller (vc)
         {
+            controller.addListener (this);
 #if JUCE_LINUX
             setUsingNativeTitleBar (false);
 #else
@@ -81,11 +83,14 @@ public:
             setContentComponentSize (VMC_WIDTH, VMC_HEIGHT);
             setResizable (false, false);
 
+            deviceChanged();
+            
             setVisible (true);
         }
 
         ~MainWindow() override
         {
+            controller.removeListener (this);
             clearContentComponent();
             setConstrainer (nullptr);
         }
@@ -108,6 +113,12 @@ public:
         void maximiseButtonPressed() override
         {
             return;
+        }
+
+        void deviceChanged() override
+        {
+            auto name = controller.deviceFile().getFileNameWithoutExtension();
+            setName ("Virtual MIDI Controller - " + name);
         }
 
     private:
