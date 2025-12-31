@@ -6,6 +6,9 @@
 #include "controller.hpp"
 #include "device.hpp"
 
+using juce::File;
+using juce::String;
+
 namespace vmc {
 struct Controller::Impl : public MidiKeyboardStateListener {
     Impl (Controller& c) : owner (c) {}
@@ -18,6 +21,42 @@ struct Controller::Impl : public MidiKeyboardStateListener {
     MidiKeyboardState keyboardState;
     juce::String virtualDeviceName { "VMC-MIDI-Out" };
     Device device;
+    juce::File deviceFile;
+
+    void saveSettings()
+    {
+        auto& devices = owner.getDeviceManager();
+
+        if (auto* const props = settings.getUserSettings()) {
+            if (auto devicesXml = devices.createStateXml()) {
+                props->setValue ("devices", devicesXml.get());
+            }
+            if (deviceFile != File() && deviceFile.existsAsFile())
+                props->setValue ("lastDeviceFile", deviceFile.getFullPathName());
+        }
+    }
+
+    void restoreSettings()
+    {
+        if (auto* props = settings.getUserSettings()) {
+            const auto path = props->getValue ("lastDeviceFile");
+            if (File::isAbsolutePath (path)) {
+                auto fileToLoad = File (path);
+                if (loadDeviceFile (fileToLoad)) {
+                    deviceFile = fileToLoad;
+                }
+            }
+        }
+    }
+
+    bool loadDeviceFile (const juce::File& file)
+    {
+        if (device.load (file)) {
+            deviceFile = file;
+            return true;
+        }
+        return false;
+    }
 
     void init()
     {
@@ -28,6 +67,12 @@ struct Controller::Impl : public MidiKeyboardStateListener {
             midiOut->startBackgroundThread();
 #endif
         keyboardState.addListener (this);
+    }
+
+    void shutdown()
+    {
+        if (deviceFile != File() && deviceFile.existsAsFile())
+            device.save (deviceFile);
     }
 
     void handleNoteOn (MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override
@@ -77,23 +122,15 @@ void Controller::initializeAudioDevice()
 
 void Controller::shutdown()
 {
+    impl->shutdown();
     auto& devices = getDeviceManager();
     devices.removeAudioCallback (this);
     devices.removeMidiInputDeviceCallback (String(), this);
     devices.closeAudioDevice();
 }
 
-void Controller::saveSettings()
-{
-    auto& settings = impl->settings;
-    auto& devices = getDeviceManager();
-
-    if (auto* const props = settings.getUserSettings()) {
-        if (auto devicesXml = devices.createStateXml()) {
-            props->setValue ("devices", devicesXml.get());
-        }
-    }
-}
+void Controller::saveSettings() { impl->saveSettings(); }
+void Controller::restoreSettings() { impl->restoreSettings(); }
 
 File Controller::getUserDataPath()
 {
@@ -112,11 +149,9 @@ File Controller::getSamplesPath()
 }
 
 MidiKeyboardState& Controller::getMidiKeyboardState() { return impl->keyboardState; }
-
-Device Controller::device() const
-{
-    return impl->device;
-}
+Device Controller::device() const { return impl->device; }
+bool Controller::loadDeviceFile (const juce::File& file) { return impl->loadDeviceFile (file); }
+File Controller::deviceFile() const noexcept { return impl->deviceFile; }
 
 Settings& Controller::getSettings() { return impl->settings; }
 AudioDeviceManager& Controller::getDeviceManager() { return *impl->audioDeviceManager; }

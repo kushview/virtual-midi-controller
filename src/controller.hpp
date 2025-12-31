@@ -19,10 +19,13 @@ public:
     ~Controller();
 
     Device device() const;
+    bool loadDeviceFile (const juce::File&);
+    File deviceFile() const noexcept;
 
     //=========================================================================
     Settings& getSettings();
     void saveSettings();
+    void restoreSettings();
 
     //=========================================================================
     void addMidiMessage (const MidiMessage msg);

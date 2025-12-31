@@ -360,9 +360,9 @@ public:
                 if (file == juce::File())
                     return;
 
-                Device tempDevice;
-                if (tempDevice.load (file)) {
-                    setDevice (tempDevice);
+                if (owner.controller.loadDeviceFile (file)) {
+                    device = {};
+                    setDevice (owner.controller.device());
                 } else {
                     auto options = juce::MessageBoxOptions::makeOptionsOk (
                         juce::MessageBoxIconType::WarningIcon,

@@ -33,12 +33,6 @@ public:
         ignoreUnused (commandLine);
         setupGlobals();
 
-        auto testFile { detail::testFile() };
-        if (testFile.existsAsFile()) {
-            auto dev = controller->device();
-            dev.load (testFile);
-        }
-
         LookAndFeel::setDefaultLookAndFeel (&look);
         mainWindow.reset (new MainWindow (getApplicationName(), *controller));
         tooltipWindow.reset (new TooltipWindow (mainWindow.get()));
@@ -46,12 +40,9 @@ public:
 
     void shutdown() override
     {
-        const auto device = controller->device();
-        device.save (detail::testFile());
-
+        controller->saveSettings();
         shutdownGui();
 
-        controller->saveSettings();
         controller->shutdown();
         controller.reset();
     }
@@ -134,6 +125,7 @@ private:
     void setupGlobals()
     {
         controller.reset (new Controller());
+        controller->restoreSettings();
         controller->initializeAudioDevice();
     }
 
