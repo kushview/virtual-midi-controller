@@ -5,7 +5,6 @@
             "name": "Unix",
             "includePath": [
                 "${workspaceRoot}/deps/JUCE/modules/*",
-                "${workspaceRoot}/deps/libkv-auth/include/*",
                 "${workspaceRoot}/src/*"
             ],
             "defines": [

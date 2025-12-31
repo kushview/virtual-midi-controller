@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_subdirectory(deps/JUCE)
-include_directories(deps/libkv-auth/include)
 
 juce_add_gui_app(virtual-midi-controller
     COMPANY_NAME "Kushview"

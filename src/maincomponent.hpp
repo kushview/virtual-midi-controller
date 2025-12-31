@@ -9,7 +9,6 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 
 #include "device.hpp"
-#include "unlock.hpp"
 #include "midicceditor.hpp"
 
 // Base UI dimensions - the keyboard area should stay this size
