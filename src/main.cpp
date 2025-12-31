@@ -3,23 +3,16 @@
     Copyright (c) 2019  Kushview, LLC.  All rights reserved.
 */
 
-#include "juce.hpp"
-#include <juce_events/juce_events.h>
+#include <juce_gui_basics/juce_gui_basics.h>
 
 #include "device.hpp"
 #include "maincomponent.hpp"
 #include "lookandfeel.hpp"
 #include "controller.hpp"
 
-namespace vmc {
-namespace detail {
-static juce::File testFile()
-{
-    return File::getSpecialLocation (File::userDesktopDirectory)
-        .getChildFile ("test.xml");
-}
-} // namespace detail
+using namespace juce;
 
+namespace vmc {
 class Application : public JUCEApplication {
 public:
     Application() {}
@@ -84,7 +77,7 @@ public:
             setResizable (false, false);
 
             deviceChanged();
-            
+
             setVisible (true);
         }
 
