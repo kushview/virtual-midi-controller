@@ -51,7 +51,7 @@ public:
     }
 
     class MainWindow : public DocumentWindow,
-                        public Controller::Listener {
+                       public Controller::Listener {
     public:
         MainWindow (String name, Controller& vc)
             : DocumentWindow (name, Desktop::getInstance().getDefaultLookAndFeel().findColour (ResizableWindow::backgroundColourId),

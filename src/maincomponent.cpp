@@ -10,6 +10,10 @@
 
 namespace vmc {
 namespace detail {
+inline static juce::Colour baseWindowColor()
+{
+    return juce::Colour::fromRGB (45, 48, 52);
+}
 inline static void styleIncDecSlider (juce::Slider& s, bool readOnly = false)
 {
     s.setSliderStyle (Slider::IncDecButtons);
@@ -105,6 +109,14 @@ public:
         loadButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white.withAlpha (0.8f));
         loadButton.setColour (juce::TextButton::textColourOnId, juce::Colours::white);
         loadButton.onClick = [this]() { loadDevice(); };
+
+        addAndMakeVisible (aboutButton);
+        aboutButton.setButtonText ("About");
+        aboutButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white.withAlpha (0.8f));
+        aboutButton.setColour (juce::TextButton::textColourOnId, juce::Colours::white);
+        aboutButton.onClick = [this]() {
+            showOrHideAboutDialog();
+        };
 
         addAndMakeVisible (program);
         detail::styleIncDecSlider (program);
@@ -205,7 +217,7 @@ public:
         auto bounds = getLocalBounds();
 
         // Base aluminum color
-        g.setColour (juce::Colour::fromRGB (45, 48, 52));
+        g.setColour (detail::baseWindowColor());
         g.fillRect (bounds);
 
         // Subtle radial gradient for depth (lighter center)
@@ -255,6 +267,7 @@ public:
         ccEditorButton.setBounds (r2.removeFromLeft (80));
         output.setBounds (r2.removeFromRight (140));
         r2.removeFromRight (5); // Gap before output
+        aboutButton.setBounds (r2.removeFromRight (70));
         loadButton.setBounds (r2.removeFromRight (70));
         saveButton.setBounds (r2.removeFromRight (70));
 
@@ -375,6 +388,88 @@ public:
             });
     }
 
+    void showOrHideAboutDialog()
+    {
+        struct AboutContent : public juce::Component {
+            juce::TextEditor text;
+            AboutContent()
+            {
+                addAndMakeVisible (text);
+                text.setMultiLine (true, true);
+                text.setReadOnly (true);
+                text.setScrollbarsShown (true);
+                text.setCaretVisible (false);
+                text.setFont (juce::Font (juce::FontOptions (14.0f)));
+                text.setColour (juce::TextEditor::backgroundColourId, juce::Colours::transparentBlack);
+                text.setColour (juce::TextEditor::outlineColourId, juce::Colours::transparentBlack);
+
+                juce::String aboutText;
+                aboutText << "Virtual MIDI Controller\n\n";
+                aboutText << "Version " << VMC_VERSION_STRING << "\n\n";
+                aboutText << "Copyright (c) Kushview, LLC.\n\n";
+                aboutText << "This program is free software: you can redistribute it\n";
+                aboutText << "and/or modify it under the terms of the GNU General\n";
+                aboutText << "Public License, version 3.\n\n";
+                aboutText << "This program is distributed in the hope that it will be\n";
+                aboutText << "useful, but WITHOUT ANY WARRANTY; without even the\n";
+                aboutText << "implied warranty of MERCHANTABILITY or FITNESS FOR A\n";
+                aboutText << "PARTICULAR PURPOSE.\n\n";
+                aboutText << "For full terms, see: \n";
+                aboutText << "https://www.gnu.org/licenses/gpl-3.0.en.html";
+
+                text.setText (aboutText, juce::dontSendNotification);
+            }
+
+            void resized() override
+            {
+                text.setBounds (getLocalBounds().reduced (10));
+            }
+        };
+
+        if (aboutWindow && aboutWindow->isVisible()) {
+            aboutWindow->closeButtonPressed();
+            return;
+        }
+
+        class AboutWindow : public juce::DocumentWindow {
+        public:
+            AboutWindow()
+                : juce::DocumentWindow ("About Virtual MIDI Controller", detail::baseWindowColor(), juce::DocumentWindow::closeButton)
+            {
+                auto* contentComp = new AboutContent();
+                setUsingNativeTitleBar (true);
+                setContentOwned (contentComp, true);
+                setResizable (false, false);
+                setSize (540, 360);
+                setAlwaysOnTop (true);
+                setVisible (false);
+            }
+
+            void closeButtonPressed() override
+            {
+                setVisible (false);
+                setAlwaysOnTop (false);
+            }
+
+            void focusLost (juce::Component::FocusChangeType) override
+            {
+                // nooop
+            }
+        };
+
+        if (! aboutWindow) {
+            aboutWindow.reset (new AboutWindow());
+            aboutWindow->centreAroundComponent (this, aboutWindow->getWidth(), aboutWindow->getHeight());
+        }
+
+        if (aboutWindow) {
+            aboutWindow->centreAroundComponent (this, aboutWindow->getWidth(), aboutWindow->getHeight());
+            aboutWindow->setVisible (true);
+            aboutWindow->toFront (true);
+            aboutWindow->setAlwaysOnTop (true);
+        }
+    }
+
 private:
     friend class MainComponent;
     MainComponent& owner;
@@ -385,6 +480,8 @@ private:
     juce::TextButton ccEditorButton;
     juce::TextButton saveButton;
     juce::TextButton loadButton;
+    juce::TextButton aboutButton;
+    std::unique_ptr<juce::DocumentWindow> aboutWindow;
     std::unique_ptr<juce::FileChooser> fileChooser;
     Device device;
     juce::Value midiChannelValue;

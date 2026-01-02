@@ -17,7 +17,7 @@ class Controller final : public AudioIODeviceCallback,
 public:
     Controller();
     ~Controller();
-    
+
     struct Listener {
         virtual ~Listener() = default;
         virtual void deviceChanged() = 0;
@@ -58,10 +58,10 @@ public:
     virtual void handleIncomingMidiMessage (MidiInput*, const MidiMessage&) override {}
     virtual void handlePartialSysexMessage (MidiInput*, const uint8*,
                                             int, double) override {}
-    
+
     void addListener (Listener*);
     void removeListener (Listener*);
-    
+
 private:
     struct Impl;
     std::unique_ptr<Impl> impl;
