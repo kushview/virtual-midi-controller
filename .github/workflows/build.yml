@@ -85,6 +85,14 @@ jobs:
       - name: Run tests
         run: ctest --test-dir build --output-on-failure
 
+      - name: Prepare macOS for DMG creation
+        if: runner.os == 'macOS'
+        run: |
+          # Unmount any stale volumes
+          hdiutil detach "/Volumes/Virtual MIDI Controller" -force || true
+          # Disable Spotlight indexing to prevent volume locking
+          sudo mdutil -a -i off
+
       - name: Installer
         run: cmake --build build --target installer --config Release
 
