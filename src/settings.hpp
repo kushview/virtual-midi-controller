@@ -17,20 +17,20 @@ public:
     Settings()
     {
         PropertiesFile::Options opts;
-        opts.applicationName = "VirtualMidiController";
+        opts.applicationName = "virtual-midi-controller";
         opts.filenameSuffix = "conf";
         opts.osxLibrarySubFolder = "Application Support";
         opts.storageFormat = PropertiesFile::storeAsCompressedBinary;
 
 #if JUCE_DEBUG
-        opts.applicationName << "Debug";
+        opts.applicationName << "_debug";
         opts.storageFormat = PropertiesFile::storeAsXML;
 #endif
 
 #if JUCE_LINUX
-        opts.folderName = ".config/Kushview/VirtualMidiController";
+        opts.folderName = ".config/kushview/virtual-midi-controller";
 #else
-        opts.folderName = "Kushview/VirtualMidiController";
+        opts.folderName = "Kushview/Virtual MIDI Controller";
 #endif
 
         setStorageParameters (opts);
