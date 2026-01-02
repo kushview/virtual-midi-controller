@@ -59,8 +59,9 @@ jobs:
     - name: Setup MSVC environment (Windows)
       if: runner.os == 'Windows'
       uses: ilammy/msvc-dev-cmd@v1
-      arch: x64
-    
+      with:
+        arch: x64
+
     - name: Configure CMake (Windows)
       if: runner.os == 'Windows'
       run: |
