@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.22)
 
 project("virtual-midi-controller" VERSION 1.0.0)
 
+set(VMC_DESCRIPTION_SUMMARY "A cross-platform MIDI controller application with virtual keyboard")
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_OSX_ARCHITECTURES arm64;x86_64)
@@ -62,6 +64,20 @@ target_link_libraries(virtual-midi-controller PRIVATE
 include(GNUInstallDirs)
 
 if(LINUX)
+    # Configure and install desktop file
+    configure_file(
+        "${PROJECT_SOURCE_DIR}/data/virtual-midi-controller.desktop.in"
+        "${PROJECT_BINARY_DIR}/virtual-midi-controller.desktop"
+        @ONLY)
+    
+    install(FILES "${PROJECT_BINARY_DIR}/virtual-midi-controller.desktop"
+        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/applications")
+    
+    # Install icon for desktop file
+    install(FILES "${PROJECT_SOURCE_DIR}/data/icon.png"
+        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/256x256/apps"
+        RENAME "virtual-midi-controller.png")
+    
     install(TARGETS virtual-midi-controller 
         DESTINATION "${CMAKE_INSTALL_BINDIR}")
 elseif(APPLE)
@@ -76,7 +92,7 @@ endif()
 set(CPACK_PACKAGE_NAME "Virtual MIDI Controller")
 set(CPACK_PACKAGE_VENDOR "Kushview")
 set(CPACK_PACKAGE_CONTACT "Kushview Support <support@kushview.net>")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A cross-platform MIDI controller application with virtual keyboard")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${VMC_DESCRIPTION_SUMMARY}")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
@@ -88,6 +104,7 @@ set(CPACK_COMPONENT_INSTALL OFF)
 
 if(LINUX)
     set(VMC_SYSTEM_NAME "linux")
+    set(CPACK_PACKAGE_NAME "virtual-midi-controller")
     string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" VMC_PROCESSOR)
     set(CPACK_GENERATOR "DEB")
     set(CPACK_PACKAGING_INSTALL_PREFIX "/usr")

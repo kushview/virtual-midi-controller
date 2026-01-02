@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Virtual MIDI Controller
+GenericName=MIDI Controller
+Comment=@VMC_DESCRIPTION_SUMMARY@
+Exec=@CMAKE_INSTALL_FULL_BINDIR@/virtual-midi-controller
+Icon=virtual-midi-controller
+Terminal=false
+Categories=AudioVideo;Audio;Midi;
+Keywords=midi;music;controller;keyboard;
+StartupNotify=true
+StartupWMClass=Virtual MIDI Controller
