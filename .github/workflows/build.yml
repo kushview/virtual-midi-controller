@@ -65,14 +65,14 @@ jobs:
     - name: Configure CMake (Windows)
       if: runner.os == 'Windows'
       run: |
-        cmake -B build -G Ninja -A x64 `
+        cmake -B build -G Ninja `
           -DCMAKE_C_COMPILER=cl `
           -DCMAKE_CXX_COMPILER=cl `
           -DCMAKE_BUILD_TYPE=Release
     
     - name: Configure CMake (macOS)
       if: runner.os == 'macOS'
-      run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="/"
 
     - name: Configure CMake (Linux)
       if: runner.os == 'Linux'
