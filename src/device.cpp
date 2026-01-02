@@ -1,3 +1,5 @@
+// Copyright 2025 (c) Kushview, LLC
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "device.hpp"
 

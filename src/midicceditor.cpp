@@ -1,7 +1,5 @@
-/*
-    This file is part of Virtual MIDI Controller
-    Copyright (c) 2019  Kushview, LLC.  All rights reserved.
-*/
+// Copyright 2025 (c) Kushview, LLC
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "maincomponent.hpp"
 #include "midicceditor.hpp"
