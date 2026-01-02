@@ -204,10 +204,12 @@ public:
 
         if (settings.getValue (Settings::currentDrawer) == "ccEditor") {
             juce::Component::SafePointer<MainComponent> ptr (&this->owner);
-            juce::Timer::callAfterDelay (14, [ptr] {
+            juce::Timer::callAfterDelay (14, [ptr, this] {
                 if (ptr && ptr.getComponent() != nullptr)
-                    if (ptr->ccDrawer != nullptr && ! ptr->ccDrawer->isOpen())
+                    if (ptr->ccDrawer != nullptr && ! ptr->ccDrawer->isOpen()) {
                         ptr->toggleDrawer();
+                        ccEditorButton.setToggleState (ptr->ccDrawer->isOpen(), dontSendNotification);
+                    }
             });
         }
     }
