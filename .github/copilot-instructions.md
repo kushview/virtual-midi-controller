@@ -9,12 +9,10 @@ This is a JUCE-based cross-platform MIDI controller application written in C++17
 - `src/` - Main application source code
 - `deps/` - Third-party dependencies (JUCE, libkv-auth, lua)
 - `data/` - Application assets and resources
-- `devices/` - MIDI device configurations
 - `CMakeLists.txt` - CMake build configuration
 
 ## Key Technologies
 - **JUCE Framework**: Used for GUI, audio, and MIDI functionality
-- **Lua 5.3.5**: Embedded scripting for device configurations
 - **CMake**: Build system (minimum version 3.22)
 - **C++17**: Language standard
 
@@ -22,14 +20,13 @@ This is a JUCE-based cross-platform MIDI controller application written in C++17
 - Follow JUCE naming conventions (CamelCase for classes, camelCase for methods)
 - Use JUCE types when possible (String, Array, etc.)
 - Prefer JUCE utilities over standard library where appropriate
-- Keep Lua bindings in `bindings.cpp` and `bindings.hpp`
 
 ## Architecture Notes
 - `MainComponent` is the primary UI class
 - `Controller` manages MIDI I/O and device state
 - `Settings` handles application configuration persistence
 - `VirtualKeyboard` provides on-screen MIDI input
-- Lua scripts define device-specific MIDI mappings
+- `Device` is the data layer using juce data structures ValueTree
 
 ## Dependencies
 For Ubuntu/Linux development, ensure these packages are installed:
@@ -51,13 +48,11 @@ cmake --build . --parallel
 ## Testing
 - Manual testing requires MIDI devices or virtual MIDI ports
 - Focus on cross-platform compatibility (Linux, macOS, Windows)
-- Test Lua script loading and execution
 - Verify MIDI input/output functionality
+- Unit tests should be run with `ctest`
 
 ## Common Tasks
-- Adding new MIDI devices: Create Lua scripts in `devices/`
 - UI modifications: Work in `MainComponent` and related files
-- MIDI functionality: Extend `Controller` class
-- New Lua bindings: Add to `bindings.cpp`
+- Format the code with the `utils/format.py` script.
 
 When suggesting code changes, prioritize JUCE best practices and maintain compatibility with the existing architecture.
