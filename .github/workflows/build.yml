@@ -117,5 +117,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: package-windows
-          path: build/virtual-midi-controller*.zip
+          path: |
+            build/virtual-midi-controller*.zip
+            build/virtual-midi-controller*.exe
           if-no-files-found: error
