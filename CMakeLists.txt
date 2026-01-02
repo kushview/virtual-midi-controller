@@ -75,7 +75,7 @@ if(LINUX)
     
     # Install icon for desktop file
     install(FILES "${PROJECT_SOURCE_DIR}/data/icon.png"
-        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/256x256/apps"
+        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/512x512/apps"
         RENAME "virtual-midi-controller.png")
     
     install(TARGETS virtual-midi-controller 
