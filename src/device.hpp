@@ -16,6 +16,9 @@ public:
     static const juce::Identifier midiProgramID;
     static const juce::Identifier dialsID;
     static const juce::Identifier fadersID;
+    static const juce::Identifier RangedID;
+    static const juce::Identifier ccNumberID;
+    static const juce::Identifier valueID;
 
     /** Creates a new device. */
     Device();

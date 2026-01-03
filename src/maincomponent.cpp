@@ -24,12 +24,6 @@ CCDial::CCDial (Controller& c) : _controller (c)
     setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
     setRange (0.0, 127.0, 1.0);
     setTextBoxStyle (juce::Slider::NoTextBox, true, 10, 10);
-
-    onValueChange = [this]() {
-        int value = juce::roundToInt (getValue());
-        _controller.addMidiMessage (MidiMessage::controllerEvent (
-            _channel, _cc, value));
-    };
 }
 
 class MainComponent::Content : public Component {
@@ -56,29 +50,14 @@ public:
         addAndMakeVisible (slider1);
         slider1.setRange (0.0, 127.0, 1.0);
         slider1.setSliderStyle (Slider::LinearVertical);
-        slider1.onValueChange = [this]() {
-            int value = roundToInt (slider1.getValue());
-            owner.controller.addMidiMessage (MidiMessage::controllerEvent (
-                midiChannel, 60, value));
-        };
 
         addAndMakeVisible (slider2);
         slider2.setRange (0.0, 127.0, 1.0);
         slider2.setSliderStyle (Slider::LinearVertical);
-        slider2.onValueChange = [this]() {
-            int value = roundToInt (slider2.getValue());
-            owner.controller.addMidiMessage (MidiMessage::controllerEvent (
-                midiChannel, 61, value));
-        };
 
         addAndMakeVisible (slider3);
         slider3.setRange (0.0, 127.0, 1.0);
         slider3.setSliderStyle (Slider::LinearVertical);
-        slider3.onValueChange = [this]() {
-            int value = roundToInt (slider3.getValue());
-            owner.controller.addMidiMessage (MidiMessage::controllerEvent (
-                midiChannel, 62, value));
-        };
 
         addAndMakeVisible (keyboard);
 
@@ -121,12 +100,6 @@ public:
         program.setTooltip ("MIDI Program");
         program.setRange (1.0, 128.0, 1.0);
         program.setValue (1.0, dontSendNotification);
-
-        program.onValueChange = [this]() {
-            int value = jlimit (1, 128, juce::roundToInt (program.getValue())) - 1;
-            owner.controller.getSettings().set (Settings::lastMidiProgram, value);
-            owner.controller.addMidiMessage (MidiMessage::programChange (midiChannel, value));
-        };
 
         addAndMakeVisible (channel);
         detail::styleIncDecSlider (channel);

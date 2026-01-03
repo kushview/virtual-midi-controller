@@ -9,9 +9,9 @@ namespace vmc {
 namespace detail {
 static juce::ValueTree makeRanged()
 {
-    juce::ValueTree out { "Ranged" };
-    out.setProperty ("ccNumber", 0, nullptr)
-        .setProperty ("value", 0, nullptr);
+    juce::ValueTree out { Device::RangedID };
+    out.setProperty (Device::ccNumberID, 0, nullptr)
+        .setProperty (Device::valueID, 0, nullptr);
     return out;
 }
 } // namespace detail
@@ -21,6 +21,9 @@ const juce::Identifier Device::midiChannelID = "midiChannel";
 const juce::Identifier Device::midiProgramID = "midiProgram";
 const juce::Identifier Device::dialsID = "dials";
 const juce::Identifier Device::fadersID = "faders";
+const juce::Identifier Device::RangedID = "Ranged";
+const juce::Identifier Device::ccNumberID = "ccNumber";
+const juce::Identifier Device::valueID = "value";
 
 Device::Device()
 {

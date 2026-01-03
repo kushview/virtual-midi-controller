@@ -8,6 +8,89 @@ using juce::File;
 using juce::String;
 
 namespace vmc {
+
+/** Listens to Device ValueTree data and generates MIDI messages when values change. */
+class MidiDispatcher : public juce::ValueTree::Listener {
+public:
+    /** Callback function type for receiving generated MIDI messages. */
+    using MidiCallback = std::function<void (const MidiMessage&)>;
+
+    MidiDispatcher() = default;
+    ~MidiDispatcher() override { detach(); }
+
+    /** Attaches the dispatcher to a Device's data and starts listening for changes.
+        @param device The device to monitor for changes.
+        @param callback The callback function to invoke when MIDI messages are generated.
+    */
+    void attach (Device& device, MidiCallback callback)
+    {
+        detach();
+        _data = device.data();
+        _midiCallback = std::move (callback);
+        _data.addListener (this);
+    }
+
+    /** Detaches from the current device and stops listening. */
+    void detach()
+    {
+        if (_data.isValid())
+            _data.removeListener (this);
+        _data = juce::ValueTree();
+        _midiCallback = nullptr;
+    }
+
+    /** Returns true if currently attached to a device. */
+    bool isAttached() const noexcept { return _data.isValid() && _midiCallback != nullptr; }
+
+private:
+    juce::ValueTree _data;
+    MidiCallback _midiCallback;
+
+    void sendMidiMessage (const MidiMessage& msg)
+    {
+        if (_midiCallback)
+            _midiCallback (msg);
+    }
+
+    int getMidiChannel() const noexcept
+    {
+        return _data.getProperty (Device::midiChannelID, 1);
+    }
+
+    void valueTreePropertyChanged (juce::ValueTree& tree, const juce::Identifier& property) override
+    {
+        if (! _midiCallback)
+            return;
+
+        // Handle device-level property changes
+        if (tree == _data) {
+            if (property == Device::midiProgramID) {
+                int program = static_cast<int> (tree.getProperty (property)) - 1; // MIDI programs are 0-127
+                program = juce::jlimit (0, 127, program);
+                sendMidiMessage (MidiMessage::programChange (getMidiChannel(), program));
+            }
+            return;
+        }
+
+        // Handle dial/fader value changes (Ranged children)
+        if (tree.getType() == Device::RangedID && property == Device::valueID) {
+            auto parent = tree.getParent();
+            if (parent.isValid() && (parent.getType() == Device::dialsID || parent.getType() == Device::fadersID)) {
+                int ccNumber = tree.getProperty (Device::ccNumberID, 0);
+                int value = static_cast<int> (tree.getProperty (Device::valueID));
+                value = juce::jlimit (0, 127, value);
+                sendMidiMessage (MidiMessage::controllerEvent (getMidiChannel(), ccNumber, value));
+            }
+        }
+    }
+
+    void valueTreeChildAdded (juce::ValueTree&, juce::ValueTree&) override {}
+    void valueTreeChildRemoved (juce::ValueTree&, juce::ValueTree&, int) override {}
+    void valueTreeChildOrderChanged (juce::ValueTree&, int, int) override {}
+    void valueTreeParentChanged (juce::ValueTree&) override {}
+    void valueTreeRedirected (juce::ValueTree&) override {}
+};
+
 struct Controller::Impl : public MidiKeyboardStateListener {
     Impl (Controller& c) : owner (c) {}
     ~Impl() {}
@@ -21,6 +104,7 @@ struct Controller::Impl : public MidiKeyboardStateListener {
     Device device;
     juce::File deviceFile;
     ListenerList<Controller::Listener> listeners;
+    MidiDispatcher dispatch;
 
     void saveSettings()
     {
@@ -53,6 +137,9 @@ struct Controller::Impl : public MidiKeyboardStateListener {
         if (device.load (file)) {
             deviceFile = file;
             listeners.call (&Controller::Listener::deviceChanged);
+            dispatch.attach (device, [this] (const MidiMessage& msg) {
+                owner.addMidiMessage (msg);
+            });
             return true;
         }
         return false;
@@ -71,6 +158,7 @@ struct Controller::Impl : public MidiKeyboardStateListener {
 
     void shutdown()
     {
+        dispatch.detach();
         if (deviceFile != File() && deviceFile.existsAsFile())
             device.save (deviceFile);
     }
