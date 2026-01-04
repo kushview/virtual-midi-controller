@@ -19,6 +19,8 @@ public:
     static const juce::Identifier RangedID;
     static const juce::Identifier ccNumberID;
     static const juce::Identifier valueID;
+    static const juce::Identifier clockBpmID;
+    static const juce::Identifier clockEnabledID;
 
     /** Creates a new device. */
     Device();
@@ -69,6 +71,14 @@ public:
     /** Returns the MIDI program of the device. */
     int midiProgram() const noexcept { return _data.getProperty (midiProgramID, 0); }
     void setMidiProgram (int newProgram);
+
+    /** Returns the MIDI clock BPM. */
+    double clockBpm() const noexcept { return _data.getProperty (clockBpmID, 120.0); }
+    void setClockBpm (double bpm);
+
+    /** Returns true if the MIDI clock is enabled. */
+    bool clockEnabled() const noexcept { return _data.getProperty (clockEnabledID, false); }
+    void setClockEnabled (bool enabled);
 
     /** Returns the underlying ValueTree data for this device. */
     const auto& data() const noexcept { return _data; }

@@ -9,6 +9,92 @@ using juce::String;
 
 namespace vmc {
 
+/** Generates sample-accurate MIDI clock messages.
+    
+    This engine calculates the correct sample positions for 24 PPQN MIDI clock
+    messages based on BPM and sample rate. It's designed to be called from the
+    audio callback for precise timing.
+*/
+class MidiClockEngine {
+public:
+    MidiClockEngine() = default;
+
+    /** Sets the BPM and recalculates timing. Thread-safe for audio thread. */
+    void setBpm (double newBpm) noexcept
+    {
+        bpm.store (juce::jlimit (20.0, 900.0, newBpm));
+        recalculateSamplesPerTick();
+    }
+
+    double getBpm() const noexcept { return bpm.load(); }
+
+    /** Called when audio device starts. Recalculates timing for new sample rate. */
+    void prepare (double newSampleRate) noexcept
+    {
+        sampleRate = newSampleRate;
+        recalculateSamplesPerTick();
+        reset();
+    }
+
+    /** Resets the clock position to zero. */
+    void reset() noexcept
+    {
+        samplePosition = 0.0;
+    }
+
+    /** Returns true if the clock is currently running. */
+    bool isRunning() const noexcept { return running.load(); }
+
+    /** Starts the clock. Returns the MIDI Start message (0xFA) to be sent. */
+    MidiMessage start() noexcept
+    {
+        reset();
+        running.store (true);
+        return MidiMessage::midiStart();
+    }
+
+    /** Stops the clock. Returns the MIDI Stop message (0xFC) to be sent. */
+    MidiMessage stop() noexcept
+    {
+        running.store (false);
+        return MidiMessage::midiStop();
+    }
+
+    /** Generates clock events for the given block of samples.
+        @param buffer The MidiBuffer to add clock messages to
+        @param numSamples The number of samples in this block
+    */
+    void processBlock (juce::MidiBuffer& buffer, int numSamples)
+    {
+        if (! running.load() || samplesPerTick <= 0.0)
+            return;
+
+        for (int i = 0; i < numSamples; ++i) {
+            if (samplePosition >= samplesPerTick) {
+                buffer.addEvent (MidiMessage::midiClock(), i);
+                samplePosition -= samplesPerTick;
+            }
+            samplePosition += 1.0;
+        }
+    }
+
+private:
+    std::atomic<double> bpm { 120.0 };
+    std::atomic<bool> running { false };
+    double sampleRate { 44100.0 };
+    double samplesPerTick { 0.0 };
+    double samplePosition { 0.0 };
+
+    void recalculateSamplesPerTick() noexcept
+    {
+        // 24 PPQN (pulses per quarter note)
+        // samplesPerTick = (sampleRate * 60.0) / (bpm * 24.0)
+        const double currentBpm = bpm.load();
+        if (currentBpm > 0.0 && sampleRate > 0.0)
+            samplesPerTick = (sampleRate * 60.0) / (currentBpm * 24.0);
+    }
+};
+
 /** Listens to Device ValueTree data and generates MIDI messages when values change. */
 class MidiDispatcher : public juce::ValueTree::Listener {
 public:
@@ -91,20 +177,24 @@ private:
     void valueTreeRedirected (juce::ValueTree&) override {}
 };
 
-struct Controller::Impl : public MidiKeyboardStateListener {
+struct Controller::Impl : public MidiKeyboardStateListener,
+                          public juce::ValueTree::Listener {
     Impl (Controller& c) : owner (c) {}
     ~Impl() {}
 
     Controller& owner;
     Settings settings;
     OptionalScopedPointer<AudioDeviceManager> audioDeviceManager;
-    std::unique_ptr<MidiOutput> midiOut;
+    std::unique_ptr<MidiOutput> virtualMidiOut;  // Virtual MIDI port (macOS/Linux)
+    std::unique_ptr<MidiOutput> selectedMidiOut; // User-selected MIDI output device
     MidiKeyboardState keyboardState;
     juce::String virtualDeviceName { "VMC-MIDI-Out" };
     Device device;
     juce::File deviceFile;
     ListenerList<Controller::Listener> listeners;
     MidiDispatcher dispatch;
+    MidiClockEngine clockEngine;
+    juce::ValueTree deviceData;
 
     void saveSettings()
     {
@@ -137,9 +227,7 @@ struct Controller::Impl : public MidiKeyboardStateListener {
         if (device.load (file)) {
             deviceFile = file;
             listeners.call (&Controller::Listener::deviceChanged);
-            dispatch.attach (device, [this] (const MidiMessage& msg) {
-                owner.addMidiMessage (msg);
-            });
+            attachDevice();
             return true;
         }
         return false;
@@ -149,19 +237,109 @@ struct Controller::Impl : public MidiKeyboardStateListener {
     {
         audioDeviceManager.setOwned (new AudioDeviceManager());
 #if JUCE_MAC || JUCE_LINUX
-        midiOut = MidiOutput::createNewDevice (virtualDeviceName);
-        if (midiOut != nullptr)
-            midiOut->startBackgroundThread();
+        virtualMidiOut = MidiOutput::createNewDevice (virtualDeviceName);
+        if (virtualMidiOut != nullptr)
+            virtualMidiOut->startBackgroundThread();
 #endif
         keyboardState.addListener (this);
+
+        // Attach the default device to the dispatcher
+        attachDevice();
+    }
+
+    void attachDevice()
+    {
+        dispatch.attach (device, [this] (const MidiMessage& msg) {
+            owner.addMidiMessage (msg);
+        });
+
+        // Listen for clock property changes
+        if (deviceData.isValid())
+            deviceData.removeListener (this);
+        deviceData = device.data();
+        deviceData.addListener (this);
+
+        // Sync clock engine with device settings
+        clockEngine.setBpm (device.clockBpm());
+        if (device.clockEnabled() && ! clockEngine.isRunning()) {
+            ensureAudioDeviceRunning();
+            owner.addMidiMessage (clockEngine.start());
+        } else if (! device.clockEnabled() && clockEngine.isRunning()) {
+            owner.addMidiMessage (clockEngine.stop());
+        }
     }
 
     void shutdown()
     {
+        if (deviceData.isValid())
+            deviceData.removeListener (this);
+        deviceData = juce::ValueTree();
         dispatch.detach();
         if (deviceFile != File() && deviceFile.existsAsFile())
             device.save (deviceFile);
+
+        if (selectedMidiOut) {
+            selectedMidiOut->stopBackgroundThread();
+            selectedMidiOut.reset();
+        }
     }
+
+    void updateDefaultMidiOutput()
+    {
+        const auto newId = audioDeviceManager->getDefaultMidiOutputIdentifier();
+
+        // Check if we need to update
+        if (selectedMidiOut && selectedMidiOut->getIdentifier() == newId)
+            return;
+
+        // Stop old output
+        if (selectedMidiOut) {
+            selectedMidiOut->stopBackgroundThread();
+            selectedMidiOut.reset();
+        }
+
+        // Open new output with background thread
+        if (newId.isNotEmpty()) {
+            selectedMidiOut = MidiOutput::openDevice (newId);
+            if (selectedMidiOut)
+                selectedMidiOut->startBackgroundThread();
+        }
+    }
+
+    void ensureAudioDeviceRunning()
+    {
+        if (auto* audioDevice = audioDeviceManager->getCurrentAudioDevice()) {
+            if (audioDevice->isPlaying())
+                return;
+        }
+        // Reinitialize audio device to start it
+        auto setup = audioDeviceManager->getAudioDeviceSetup();
+        audioDeviceManager->setAudioDeviceSetup (setup, true);
+    }
+
+    // ValueTree::Listener - handle clock property changes
+    void valueTreePropertyChanged (juce::ValueTree& tree, const juce::Identifier& property) override
+    {
+        if (tree != deviceData)
+            return;
+
+        if (property == Device::clockBpmID) {
+            clockEngine.setBpm (device.clockBpm());
+        } else if (property == Device::clockEnabledID) {
+            if (device.clockEnabled() && ! clockEngine.isRunning()) {
+                ensureAudioDeviceRunning();
+                owner.addMidiMessage (clockEngine.start());
+            } else if (! device.clockEnabled() && clockEngine.isRunning()) {
+                owner.addMidiMessage (clockEngine.stop());
+            }
+        }
+    }
+
+    void valueTreeChildAdded (juce::ValueTree&, juce::ValueTree&) override {}
+    void valueTreeChildRemoved (juce::ValueTree&, juce::ValueTree&, int) override {}
+    void valueTreeChildOrderChanged (juce::ValueTree&, int, int) override {}
+    void valueTreeParentChanged (juce::ValueTree&) override {}
+    void valueTreeRedirected (juce::ValueTree&) override {}
 
     void handleNoteOn (MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override
     {
@@ -183,8 +361,8 @@ Controller::Controller()
 Controller::~Controller()
 {
     impl->keyboardState.removeListener (impl.get());
-    if (impl->midiOut != nullptr)
-        impl->midiOut->stopBackgroundThread();
+    if (impl->virtualMidiOut != nullptr)
+        impl->virtualMidiOut->stopBackgroundThread();
     impl.reset();
 }
 
@@ -244,14 +422,16 @@ File Controller::deviceFile() const noexcept { return impl->deviceFile; }
 Settings& Controller::getSettings() { return impl->settings; }
 AudioDeviceManager& Controller::getDeviceManager() { return *impl->audioDeviceManager; }
 
+void Controller::updateMidiOutput() { impl->updateDefaultMidiOutput(); }
+
 void Controller::addMidiMessage (const MidiMessage msg)
 {
     // std::cout << msg.getDescription() << std::endl;
 
-    if (impl->midiOut)
-        impl->midiOut->sendMessageNow (msg);
-    if (auto* const dout = impl->audioDeviceManager->getDefaultMidiOutput())
-        dout->sendMessageNow (msg);
+    if (impl->virtualMidiOut)
+        impl->virtualMidiOut->sendMessageNow (msg);
+    if (impl->selectedMidiOut)
+        impl->selectedMidiOut->sendMessageNow (msg);
 }
 
 void Controller::audioDeviceIOCallbackWithContext (const float* const* inputChannelData,
@@ -261,11 +441,29 @@ void Controller::audioDeviceIOCallbackWithContext (const float* const* inputChan
                                                    int numSamples,
                                                    const AudioIODeviceCallbackContext& context)
 {
-    juce::ignoreUnused (inputChannelData, numInputChannels, outputChannelData, numOutputChannels, numSamples, context);
+    juce::ignoreUnused (inputChannelData, numInputChannels, outputChannelData, numOutputChannels, context);
+
+    // Generate MIDI clock messages with sample-accurate timing
+    juce::MidiBuffer clockBuffer;
+    impl->clockEngine.processBlock (clockBuffer, numSamples);
+
+    // Send clock messages to MIDI outputs
+    for (const auto metadata : clockBuffer) {
+        addMidiMessage (metadata.getMessage());
+    }
 }
 
-void Controller::audioDeviceAboutToStart (AudioIODevice*) {}
-void Controller::audioDeviceStopped() {}
+void Controller::audioDeviceAboutToStart (AudioIODevice* device)
+{
+    if (device != nullptr) {
+        impl->clockEngine.prepare (device->getCurrentSampleRate());
+    }
+}
+
+void Controller::audioDeviceStopped()
+{
+    impl->clockEngine.reset();
+}
 void Controller::audioDeviceError (const String& errorMessage) { juce::ignoreUnused (errorMessage); }
 
 void Controller::addListener (Listener* listener) { impl->listeners.add (listener); }

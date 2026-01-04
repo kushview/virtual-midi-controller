@@ -24,12 +24,16 @@ const juce::Identifier Device::fadersID = "faders";
 const juce::Identifier Device::RangedID = "Ranged";
 const juce::Identifier Device::ccNumberID = "ccNumber";
 const juce::Identifier Device::valueID = "value";
+const juce::Identifier Device::clockBpmID = "clockBpm";
+const juce::Identifier Device::clockEnabledID = "clockEnabled";
 
 Device::Device()
 {
     _data.setProperty (nameID, "VMC", nullptr)
         .setProperty (midiChannelID, 1, nullptr)
-        .setProperty (midiProgramID, 1, nullptr);
+        .setProperty (midiProgramID, 1, nullptr)
+        .setProperty (clockBpmID, 120.0, nullptr)
+        .setProperty (clockEnabledID, false, nullptr);
     auto things = _data.getOrCreateChildWithName (dialsID, nullptr);
     for (int i = 0; i < 8; ++i)
         things.appendChild (detail::makeRanged(), nullptr);
@@ -71,6 +75,16 @@ void Device::setMidiChannel (int newChannel)
 void Device::setMidiProgram (int newProgram)
 {
     _data.setProperty (midiProgramID, juce::jlimit (1, 128, newProgram), _undo);
+}
+
+void Device::setClockBpm (double bpm)
+{
+    _data.setProperty (clockBpmID, juce::jlimit (20.0, 900.0, bpm), _undo);
+}
+
+void Device::setClockEnabled (bool enabled)
+{
+    _data.setProperty (clockEnabledID, enabled, _undo);
 }
 
 } // namespace vmc

@@ -26,7 +26,8 @@ CCDial::CCDial (Controller& c) : _controller (c)
     setTextBoxStyle (juce::Slider::NoTextBox, true, 10, 10);
 }
 
-class MainComponent::Content : public Component {
+class MainComponent::Content : public Component,
+                               public juce::Value::Listener {
 public:
     Content (MainComponent& o)
         : owner (o),
@@ -95,6 +96,26 @@ public:
             showOrHideAboutDialog();
         };
 
+        // MIDI Clock controls
+        addAndMakeVisible (bpmSlider);
+        bpmSlider.setSliderStyle (Slider::LinearHorizontal);
+        bpmSlider.setTextBoxStyle (Slider::TextBoxLeft, false, 40, 20);
+        bpmSlider.setRange (20.0, 900.0, 1.0);
+        bpmSlider.setValue (120.0, dontSendNotification);
+        bpmSlider.setTooltip ("MIDI Clock BPM");
+
+        addAndMakeVisible (clockStartButton);
+        clockStartButton.setButtonText ("Start");
+        clockStartButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white.withAlpha (0.8f));
+        clockStartButton.setColour (juce::TextButton::textColourOnId, juce::Colours::white);
+        clockStartButton.setColour (juce::TextButton::buttonOnColourId, juce::Colour::fromRGB (64, 200, 64));
+        clockStartButton.setClickingTogglesState (true);
+        clockStartButton.onClick = [this]() {
+            if (device.isValid()) {
+                device.setClockEnabled (clockStartButton.getToggleState());
+            }
+        };
+
         addAndMakeVisible (program);
         detail::styleIncDecSlider (program);
         program.setTooltip ("MIDI Program");
@@ -125,6 +146,8 @@ public:
                 const auto info = _devices[output.getSelectedId() - 1000];
                 devices.setDefaultMidiOutputDevice (info.identifier);
             }
+
+            owner.controller.updateMidiOutput();
         };
 
         int midiCC = 102; // start CC number here.
@@ -148,6 +171,8 @@ public:
         program.onValueChange = nullptr;
         channel.onValueChange = nullptr;
         output.onChange = nullptr;
+        bpmSlider.onValueChange = nullptr;
+        clockStartButton.onClick = nullptr;
     }
 
     void updateWithSettings()
@@ -183,6 +208,9 @@ public:
                     }
             });
         }
+
+        // Update the cached MIDI output
+        owner.controller.updateMidiOutput();
     }
 
     void paint (Graphics& g) override
@@ -238,6 +266,12 @@ public:
         program.setBounds (r2.removeFromLeft (90));
         r2.removeFromLeft (10); // Small gap
         ccEditorButton.setBounds (r2.removeFromLeft (80));
+
+        // MIDI Clock controls
+        r2.removeFromLeft (10);
+        bpmSlider.setBounds (r2.removeFromLeft (120));
+        clockStartButton.setBounds (r2.removeFromLeft (50));
+
         output.setBounds (r2.removeFromRight (140));
         r2.removeFromRight (5); // Gap before output
         aboutButton.setBounds (r2.removeFromRight (70));
@@ -282,6 +316,15 @@ public:
             midiProgramValue = device.propertyAsValue (Device::midiProgramID);
             channel.getValueObject().referTo (midiChannelValue);
             program.getValueObject().referTo (midiProgramValue);
+
+            // Bind clock controls
+            clockBpmValue = device.propertyAsValue (Device::clockBpmID);
+            clockEnabledValue = device.propertyAsValue (Device::clockEnabledID);
+            bpmSlider.getValueObject().referTo (clockBpmValue);
+            clockStartButton.setToggleState (device.clockEnabled(), dontSendNotification);
+
+            // Update button state when clockEnabled changes
+            clockEnabledValue.addListener (this);
 
             if (dialValues.size() != (size_t) _dials.size())
                 dialValues.resize (_dials.size());
@@ -443,12 +486,21 @@ public:
         }
     }
 
+    void valueChanged (juce::Value& value) override
+    {
+        if (value.refersToSameSourceAs (clockEnabledValue)) {
+            clockStartButton.setToggleState (static_cast<bool> (clockEnabledValue.getValue()), dontSendNotification);
+        }
+    }
+
 private:
     friend class MainComponent;
     MainComponent& owner;
     VirtualKeyboard keyboard;
     Slider slider1, slider2, slider3;
     Slider program, channel;
+    Slider bpmSlider;
+    juce::TextButton clockStartButton;
     ComboBox output;
     juce::TextButton ccEditorButton;
     juce::TextButton saveButton;
@@ -459,6 +511,8 @@ private:
     Device device;
     juce::Value midiChannelValue;
     juce::Value midiProgramValue;
+    juce::Value clockBpmValue;
+    juce::Value clockEnabledValue;
     std::vector<juce::Value> dialValues;
     std::vector<juce::Value> faderValues;
 

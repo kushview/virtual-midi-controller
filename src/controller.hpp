@@ -41,6 +41,9 @@ public:
     //=========================================================================
     AudioDeviceManager& getDeviceManager();
 
+    /** Call this after changing the default MIDI output device. */
+    void updateMidiOutput();
+
     //=========================================================================
     void audioDeviceIOCallbackWithContext (const float* const* inputChannelData,
                                            int numInputChannels,
