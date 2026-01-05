@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "juce.hpp"
 #include <juce_gui_basics/juce_gui_basics.h>
 
 #include "device.hpp"
@@ -44,7 +43,7 @@ private:
     int _cc = 0, _channel = 1;
 };
 
-class MainComponent : public Component {
+class MainComponent : public juce::Component {
 public:
     MainComponent (Controller&);
     ~MainComponent();
@@ -54,7 +53,7 @@ public:
     Device device() const;
     void setDevice (const Device& newDevice);
 
-    void paint (Graphics&) override;
+    void paint (juce::Graphics&) override;
     void resized() override;
 
 private:
