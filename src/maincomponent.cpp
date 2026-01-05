@@ -98,7 +98,7 @@ public:
 
         // MIDI Clock controls
         addAndMakeVisible (bpmSlider);
-        bpmSlider.setSliderStyle (Slider::LinearHorizontal);
+        bpmSlider.setSliderStyle (Slider::IncDecButtons);
         bpmSlider.setTextBoxStyle (Slider::TextBoxLeft, false, 40, 20);
         bpmSlider.setRange (20.0, 900.0, 1.0);
         bpmSlider.setValue (120.0, dontSendNotification);
