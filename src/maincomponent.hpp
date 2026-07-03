@@ -14,7 +14,7 @@
 #endif
 
 #ifndef VMC_HEIGHT
-    #define VMC_HEIGHT 320
+    #define VMC_HEIGHT 348
 #endif
 
 namespace vmc {

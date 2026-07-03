@@ -45,6 +45,7 @@ const juce::Identifier Device::messageTypeID = "messageType";
 const juce::Identifier Device::valueID = "value";
 const juce::Identifier Device::clockBpmID = "clockBpm";
 const juce::Identifier Device::clockEnabledID = "clockEnabled";
+const juce::Identifier Device::clockTransportID = "clockTransport";
 
 Device::Device()
 {
@@ -52,7 +53,8 @@ Device::Device()
         .setProperty (midiChannelID, 1, nullptr)
         .setProperty (midiProgramID, 1, nullptr)
         .setProperty (clockBpmID, 120.0, nullptr)
-        .setProperty (clockEnabledID, false, nullptr);
+        .setProperty (clockEnabledID, false, nullptr)
+        .setProperty (clockTransportID, false, nullptr);
     auto things = _data.getOrCreateChildWithName (dialsID, nullptr);
     for (int i = 0; i < 8; ++i)
         things.appendChild (detail::makeRanged(), nullptr);
@@ -104,6 +106,11 @@ void Device::setClockBpm (double bpm)
 void Device::setClockEnabled (bool enabled)
 {
     _data.setProperty (clockEnabledID, enabled, _undo);
+}
+
+void Device::setClockSendTransport (bool enabled)
+{
+    _data.setProperty (clockTransportID, enabled, _undo);
 }
 
 } // namespace vmc

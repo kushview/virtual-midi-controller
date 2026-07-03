@@ -22,6 +22,7 @@ public:
     static const juce::Identifier valueID;
     static const juce::Identifier clockBpmID;
     static const juce::Identifier clockEnabledID;
+    static const juce::Identifier clockTransportID;
 
     /** Creates a new device. */
     Device();
@@ -80,6 +81,11 @@ public:
     /** Returns true if the MIDI clock is enabled. */
     bool clockEnabled() const noexcept { return _data.getProperty (clockEnabledID, false); }
     void setClockEnabled (bool enabled);
+
+    /** Returns true if MIDI transport (Start/Stop/Continue) messages should be
+        sent along with the clock. Defaults to false (clock pulses only). */
+    bool clockSendTransport() const noexcept { return _data.getProperty (clockTransportID, false); }
+    void setClockSendTransport (bool enabled);
 
     /** Returns the underlying ValueTree data for this device. */
     const auto& data() const noexcept { return _data; }

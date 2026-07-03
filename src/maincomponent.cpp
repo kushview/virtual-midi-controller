@@ -33,9 +33,13 @@ public:
         : owner (o),
           keyboard (o.controller.getMidiKeyboardState())
     {
-        // Load the logo image
+        // Load the logo image and rescale it once to its display size
         logo = juce::ImageCache::getFromMemory (BinaryData::vmclogo_png,
                                                 BinaryData::vmclogo_pngSize);
+        if (logo.isValid()) {
+            logoWidth = (int) ((float) logoHeight * logo.getWidth() / logo.getHeight());
+            logo = logo.rescaled (logoWidth, logoHeight, juce::Graphics::ResamplingQuality::highResamplingQuality);
+        }
 
         setOpaque (true);
 
@@ -96,6 +100,11 @@ public:
         };
 
         // MIDI Clock controls
+        addAndMakeVisible (bpmLabel);
+        bpmLabel.setText ("BPM", dontSendNotification);
+        bpmLabel.setJustificationType (juce::Justification::centredRight);
+        bpmLabel.setColour (juce::Label::textColourId, juce::Colours::white.withAlpha (0.8f));
+
         addAndMakeVisible (bpmSlider);
         bpmSlider.setSliderStyle (Slider::IncDecButtons);
         bpmSlider.setTextBoxStyle (Slider::TextBoxLeft, false, 40, 20);
@@ -103,15 +112,29 @@ public:
         bpmSlider.setValue (120.0, dontSendNotification);
         bpmSlider.setTooltip ("MIDI Clock BPM");
 
-        addAndMakeVisible (clockStartButton);
-        clockStartButton.setButtonText ("Start");
-        clockStartButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white.withAlpha (0.8f));
-        clockStartButton.setColour (juce::TextButton::textColourOnId, juce::Colours::white);
-        clockStartButton.setColour (juce::TextButton::buttonOnColourId, juce::Colour::fromRGB (64, 200, 64));
-        clockStartButton.setClickingTogglesState (true);
-        clockStartButton.onClick = [this]() {
+        addAndMakeVisible (clockButton);
+        clockButton.setButtonText ("Clock");
+        clockButton.setTooltip ("Send MIDI clock pulses");
+        clockButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white.withAlpha (0.8f));
+        clockButton.setColour (juce::TextButton::textColourOnId, juce::Colours::white);
+        clockButton.setColour (juce::TextButton::buttonOnColourId, juce::Colour::fromRGB (64, 200, 64));
+        clockButton.setClickingTogglesState (true);
+        clockButton.onClick = [this]() {
             if (device.isValid()) {
-                device.setClockEnabled (clockStartButton.getToggleState());
+                device.setClockEnabled (clockButton.getToggleState());
+            }
+        };
+
+        addAndMakeVisible (transportButton);
+        transportButton.setButtonText ("Start/Stop");
+        transportButton.setTooltip ("Send MIDI Start/Stop/Continue with the clock");
+        transportButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white.withAlpha (0.8f));
+        transportButton.setColour (juce::TextButton::textColourOnId, juce::Colours::white);
+        transportButton.setColour (juce::TextButton::buttonOnColourId, juce::Colour::fromRGB (64, 200, 64));
+        transportButton.setClickingTogglesState (true);
+        transportButton.onClick = [this]() {
+            if (device.isValid()) {
+                device.setClockSendTransport (transportButton.getToggleState());
             }
         };
 
@@ -170,7 +193,8 @@ public:
         channel.onValueChange = nullptr;
         output.onChange = nullptr;
         bpmSlider.onValueChange = nullptr;
-        clockStartButton.onClick = nullptr;
+        clockButton.onClick = nullptr;
+        transportButton.onClick = nullptr;
     }
 
     void updateWithSettings()
@@ -241,11 +265,8 @@ public:
         g.setColour (juce::Colours::black.withAlpha (0.15f));
         g.drawRect (bounds);
 
-        // Draw logo centered at top
+        // Draw logo centered at top (already rescaled to display size in the constructor)
         if (logo.isValid()) {
-            const int logoHeight = 40;
-            const int logoWidth = (int) ((float) logoHeight * logo.getWidth() / logo.getHeight());
-            logo = logo.rescaled (logoWidth, logoHeight, juce::Graphics::ResamplingQuality::highResamplingQuality);
             g.drawImageWithin (logo,
                                bounds.getCentreX() - logoWidth / 2,
                                4, // Top margin
@@ -265,16 +286,21 @@ public:
         r2.removeFromLeft (10); // Small gap
         ccEditorButton.setBounds (r2.removeFromLeft (80));
 
-        // MIDI Clock controls
-        r2.removeFromLeft (10);
-        bpmSlider.setBounds (r2.removeFromLeft (120));
-        clockStartButton.setBounds (r2.removeFromLeft (50));
-
         output.setBounds (r2.removeFromRight (140));
         r2.removeFromRight (5); // Gap before output
         aboutButton.setBounds (r2.removeFromRight (70));
         loadButton.setBounds (r2.removeFromRight (70));
         saveButton.setBounds (r2.removeFromRight (70));
+
+        // MIDI Clock transport footer along the bottom
+        auto footer = r.removeFromBottom (26);
+        footer.removeFromLeft (4);
+        bpmLabel.setBounds (footer.removeFromLeft (36));
+        bpmSlider.setBounds (footer.removeFromLeft (120));
+        footer.removeFromLeft (6);
+        clockButton.setBounds (footer.removeFromLeft (60));
+        footer.removeFromLeft (6);
+        transportButton.setBounds (footer.removeFromLeft (90));
 
         auto r3 = r.removeFromBottom (180);
         slider1.setBounds (r3.removeFromLeft (30));
@@ -318,11 +344,14 @@ public:
             // Bind clock controls
             clockBpmValue = device.propertyAsValue (Device::clockBpmID);
             clockEnabledValue = device.propertyAsValue (Device::clockEnabledID);
+            clockTransportValue = device.propertyAsValue (Device::clockTransportID);
             bpmSlider.getValueObject().referTo (clockBpmValue);
-            clockStartButton.setToggleState (device.clockEnabled(), dontSendNotification);
+            clockButton.setToggleState (device.clockEnabled(), dontSendNotification);
+            transportButton.setToggleState (device.clockSendTransport(), dontSendNotification);
 
-            // Update button state when clockEnabled changes
+            // Keep the buttons in sync when the values change externally
             clockEnabledValue.addListener (this);
+            clockTransportValue.addListener (this);
 
             if (dialValues.size() != (size_t) _dials.size())
                 dialValues.resize (_dials.size());
@@ -492,7 +521,9 @@ public:
     void valueChanged (juce::Value& value) override
     {
         if (value.refersToSameSourceAs (clockEnabledValue)) {
-            clockStartButton.setToggleState (static_cast<bool> (clockEnabledValue.getValue()), dontSendNotification);
+            clockButton.setToggleState (static_cast<bool> (clockEnabledValue.getValue()), dontSendNotification);
+        } else if (value.refersToSameSourceAs (clockTransportValue)) {
+            transportButton.setToggleState (static_cast<bool> (clockTransportValue.getValue()), dontSendNotification);
         }
     }
 
@@ -503,7 +534,9 @@ private:
     Slider slider1, slider2;
     Slider program, channel;
     Slider bpmSlider;
-    juce::TextButton clockStartButton;
+    juce::Label bpmLabel;
+    juce::TextButton clockButton;
+    juce::TextButton transportButton;
     ComboBox output;
     juce::TextButton ccEditorButton;
     juce::TextButton saveButton;
@@ -516,6 +549,7 @@ private:
     juce::Value midiProgramValue;
     juce::Value clockBpmValue;
     juce::Value clockEnabledValue;
+    juce::Value clockTransportValue;
     std::vector<juce::Value> dialValues;
     std::vector<juce::Value> faderValues;
 
@@ -526,6 +560,8 @@ private:
     std::vector<float> brushAlphas;         // Store horizontal brush pattern
     std::vector<float> verticalBrushAlphas; // Store vertical brush pattern
     juce::Image logo;
+    static constexpr int logoHeight = 40;
+    int logoWidth = 0;
 };
 
 MainComponent::MainComponent (Controller& vc)

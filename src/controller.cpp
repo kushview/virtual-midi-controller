@@ -267,11 +267,22 @@ struct Controller::Impl : public MidiKeyboardStateListener,
 
         // Sync clock engine with device settings
         clockEngine.setBpm (device.clockBpm());
+        updateClockRunning();
+    }
+
+    // Starts/stops the clock engine to match device.clockEnabled(), sending the
+    // MIDI Start/Stop transport message only when device.clockSendTransport() is on.
+    void updateClockRunning()
+    {
         if (device.clockEnabled() && ! clockEngine.isRunning()) {
             ensureAudioDeviceRunning();
-            owner.addMidiMessage (clockEngine.start());
+            const auto startMsg = clockEngine.start();
+            if (device.clockSendTransport())
+                owner.addMidiMessage (startMsg);
         } else if (! device.clockEnabled() && clockEngine.isRunning()) {
-            owner.addMidiMessage (clockEngine.stop());
+            const auto stopMsg = clockEngine.stop();
+            if (device.clockSendTransport())
+                owner.addMidiMessage (stopMsg);
         }
     }
 
@@ -332,12 +343,13 @@ struct Controller::Impl : public MidiKeyboardStateListener,
         if (property == Device::clockBpmID) {
             clockEngine.setBpm (device.clockBpm());
         } else if (property == Device::clockEnabledID) {
-            if (device.clockEnabled() && ! clockEngine.isRunning()) {
-                ensureAudioDeviceRunning();
-                owner.addMidiMessage (clockEngine.start());
-            } else if (! device.clockEnabled() && clockEngine.isRunning()) {
-                owner.addMidiMessage (clockEngine.stop());
-            }
+            updateClockRunning();
+        } else if (property == Device::clockTransportID) {
+            // Toggling transport while the clock is already running: Continue when
+            // turning it on, Stop when turning it off.
+            if (clockEngine.isRunning())
+                owner.addMidiMessage (device.clockSendTransport() ? MidiMessage::midiContinue()
+                                                                  : MidiMessage::midiStop());
         }
     }
 
