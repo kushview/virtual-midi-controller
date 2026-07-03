@@ -1,4 +1,4 @@
-# GitHub Copilot Instructions for Virtual MIDI Controller
+# Claude file for Virtual MIDI Controller
 
 This is a JUCE-based cross-platform MIDI controller application written in C++17. When working on this project, please keep these guidelines in mind:
 

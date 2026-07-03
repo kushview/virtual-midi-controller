@@ -30,3 +30,5 @@ build/
 
 # Keep libkv-auth stubs for builds when private repo is unavailable
 # These files in deps/libkv-auth/include/ are stub implementations
+
+.cache

@@ -162,10 +162,16 @@ private:
         if (tree.getType() == Device::RangedID && property == Device::valueID) {
             auto parent = tree.getParent();
             if (parent.isValid() && (parent.getType() == Device::dialsID || parent.getType() == Device::fadersID)) {
-                int ccNumber = tree.getProperty (Device::ccNumberID, 0);
-                int value = static_cast<int> (tree.getProperty (Device::valueID));
-                value = juce::jlimit (0, 127, value);
-                sendMidiMessage (MidiMessage::controllerEvent (getMidiChannel(), ccNumber, value));
+                int value = juce::jlimit (0, 127, static_cast<int> (tree.getProperty (Device::valueID)));
+                const juce::String messageType = tree.getProperty (Device::messageTypeID, "cc").toString();
+
+                if (messageType == "pitch") {
+                    int position = juce::jlimit (0, 16383, (value * 16383) / 127);
+                    sendMidiMessage (MidiMessage::pitchWheel (getMidiChannel(), position));
+                } else {
+                    int ccNumber = tree.getProperty (Device::ccNumberID, 0);
+                    sendMidiMessage (MidiMessage::controllerEvent (getMidiChannel(), ccNumber, value));
+                }
             }
         }
     }

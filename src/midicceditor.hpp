@@ -4,6 +4,7 @@
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
+#include <juce_data_structures/juce_data_structures.h>
 
 namespace vmc {
 
@@ -18,6 +19,10 @@ public:
 
     void setValue (int ccNumber);
     int getValue() const;
+
+    /** Puts the cell into a non-editable state, optionally showing custom text
+        (e.g. "PB" for pitch bend controls that have no CC number). */
+    void setReadOnly (bool readOnly, const juce::String& displayText = {});
 
     std::function<void (int)> onValueChanged;
 
@@ -60,9 +65,11 @@ private:
 struct MidiCCMapping {
     juce::String componentName;
     juce::Component* component = nullptr;
-    int ccNumber = -1; // -1 means no mapping
+    juce::ValueTree valueTree; // the control's Ranged child in the Device data
+    int ccNumber = -1;         // -1 means no mapping
     int midiChannel = 1;
     bool isLearning = false;
+    bool ccEditable = true; // false for controls without a CC (e.g. pitch bend)
 
     enum ComponentType {
         VerticalSlider,
@@ -95,7 +102,8 @@ public:
     // Table setup
     void setupTable();
     void refreshMappings();
-    void addMapping (const juce::String& name, juce::Component* comp, MidiCCMapping::ComponentType type);
+    void addMapping (const juce::String& name, juce::Component* comp, MidiCCMapping::ComponentType type,
+                     juce::ValueTree valueTree = {}, bool ccEditable = true);
 
     // MIDI CC functionality
     void setCCMapping (int row, int ccNumber);

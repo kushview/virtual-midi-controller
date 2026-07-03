@@ -56,9 +56,8 @@ public:
         slider2.setRange (0.0, 127.0, 1.0);
         slider2.setSliderStyle (Slider::LinearVertical);
 
-        addAndMakeVisible (slider3);
-        slider3.setRange (0.0, 127.0, 1.0);
-        slider3.setSliderStyle (Slider::LinearVertical);
+        slider1.setTooltip ("Pitch Bend");
+        slider2.setTooltip ("Mod Wheel");
 
         addAndMakeVisible (keyboard);
 
@@ -167,7 +166,6 @@ public:
     {
         slider1.onValueChange = nullptr;
         slider2.onValueChange = nullptr;
-        slider3.onValueChange = nullptr;
         program.onValueChange = nullptr;
         channel.onValueChange = nullptr;
         output.onChange = nullptr;
@@ -333,17 +331,22 @@ public:
             for (int i = 0; i < _dials.size(); ++i) {
                 auto child = dialsTree.getChild (i);
                 if (child.isValid()) {
+                    child.setProperty (Device::ccNumberID,
+                                       _dials.getUnchecked (i)->controllerNumber(),
+                                       nullptr);
                     dialValues[(size_t) i] = child.getPropertyAsValue ("value", nullptr);
                     _dials.getUnchecked (i)->getValueObject().referTo (dialValues[(size_t) i]);
                 }
             }
 
-            if (faderValues.size() != 3u)
-                faderValues.resize (3u);
+            juce::Slider* faders[] = { &slider1, &slider2 };
+            const int numFaders = (int) (sizeof (faders) / sizeof (faders[0]));
 
-            juce::Slider* faders[] = { &slider1, &slider2, &slider3 };
+            if (faderValues.size() != (size_t) numFaders)
+                faderValues.resize ((size_t) numFaders);
+
             const auto fadersTree = device.faders();
-            for (int i = 0; i < 3; ++i) {
+            for (int i = 0; i < numFaders; ++i) {
                 auto child = fadersTree.getChild (i);
                 if (child.isValid()) {
                     faderValues[(size_t) i] = child.getPropertyAsValue ("value", nullptr);
@@ -497,7 +500,7 @@ private:
     friend class MainComponent;
     MainComponent& owner;
     VirtualKeyboard keyboard;
-    Slider slider1, slider2, slider3;
+    Slider slider1, slider2;
     Slider program, channel;
     Slider bpmSlider;
     juce::TextButton clockStartButton;
@@ -625,9 +628,20 @@ void MainComponent::toggleDrawer()
                 // This is a simplified approach - in a real implementation you'd want
                 // a cleaner way to access these components
 
-                // Add dials (we know there are 8 from the code)
-                for (auto* dial : content->_dials) {
-                    editor.addMapping (dial->getName(), dial, MidiCCMapping::Dial);
+                const auto dialsTree = content->device.dials();
+                for (int i = 0; i < content->_dials.size(); ++i) {
+                    auto* dial = content->_dials.getUnchecked (i);
+                    editor.addMapping (dial->getName(), dial, MidiCCMapping::Dial, dialsTree.getChild (i));
+                }
+
+                // Faders: fader 0 = Pitch Bend (no CC), fader 1 = Mod Wheel (CC 1)
+                const auto fadersTree = content->device.faders();
+                juce::Slider* faders[] = { &content->slider1, &content->slider2 };
+                const char* faderNames[] = { "Pitch Bend", "Mod Wheel" };
+                for (int i = 0; i < (int) (sizeof (faders) / sizeof (faders[0])); ++i) {
+                    auto child = fadersTree.getChild (i);
+                    const bool isPitch = child.getProperty (Device::messageTypeID, "cc").toString() == "pitch";
+                    editor.addMapping (faderNames[i], faders[i], MidiCCMapping::VerticalSlider, child, ! isPitch);
                 }
             }
         }

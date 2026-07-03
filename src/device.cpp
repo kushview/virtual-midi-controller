@@ -11,6 +11,24 @@ static juce::ValueTree makeRanged()
 {
     juce::ValueTree out { Device::RangedID };
     out.setProperty (Device::ccNumberID, 0, nullptr)
+        .setProperty (Device::messageTypeID, "cc", nullptr)
+        .setProperty (Device::valueID, 0, nullptr);
+    return out;
+}
+
+static juce::ValueTree makePitchFader()
+{
+    juce::ValueTree out { Device::RangedID };
+    out.setProperty (Device::messageTypeID, "pitch", nullptr)
+        .setProperty (Device::valueID, 64, nullptr); // center (maps to pitch 8192)
+    return out;
+}
+
+static juce::ValueTree makeCCFader (int ccNumber)
+{
+    juce::ValueTree out { Device::RangedID };
+    out.setProperty (Device::ccNumberID, ccNumber, nullptr)
+        .setProperty (Device::messageTypeID, "cc", nullptr)
         .setProperty (Device::valueID, 0, nullptr);
     return out;
 }
@@ -23,6 +41,7 @@ const juce::Identifier Device::dialsID = "dials";
 const juce::Identifier Device::fadersID = "faders";
 const juce::Identifier Device::RangedID = "Ranged";
 const juce::Identifier Device::ccNumberID = "ccNumber";
+const juce::Identifier Device::messageTypeID = "messageType";
 const juce::Identifier Device::valueID = "value";
 const juce::Identifier Device::clockBpmID = "clockBpm";
 const juce::Identifier Device::clockEnabledID = "clockEnabled";
@@ -38,8 +57,8 @@ Device::Device()
     for (int i = 0; i < 8; ++i)
         things.appendChild (detail::makeRanged(), nullptr);
     things = _data.getOrCreateChildWithName (fadersID, nullptr);
-    for (int i = 0; i < 2; ++i)
-        things.appendChild (detail::makeRanged(), nullptr);
+    things.appendChild (detail::makePitchFader(), nullptr); // fader 1: pitch bend
+    things.appendChild (detail::makeCCFader (1), nullptr);  // fader 2: mod wheel (CC 1)
 }
 
 Device::~Device()

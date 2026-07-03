@@ -18,6 +18,7 @@ public:
     static const juce::Identifier fadersID;
     static const juce::Identifier RangedID;
     static const juce::Identifier ccNumberID;
+    static const juce::Identifier messageTypeID;
     static const juce::Identifier valueID;
     static const juce::Identifier clockBpmID;
     static const juce::Identifier clockEnabledID;

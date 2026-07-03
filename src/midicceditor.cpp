@@ -46,6 +46,16 @@ int CCNumberEditor::getValue() const
     return currentValue;
 }
 
+void CCNumberEditor::setReadOnly (bool readOnly, const juce::String& displayText)
+{
+    textEditor.setReadOnly (readOnly);
+    textEditor.setInterceptsMouseClicks (! readOnly, ! readOnly);
+    textEditor.setColour (juce::TextEditor::textColourId,
+                          juce::Colours::white.withAlpha (readOnly ? 0.5f : 0.9f));
+    if (readOnly && displayText.isNotEmpty())
+        textEditor.setText (displayText, juce::dontSendNotification);
+}
+
 void CCNumberEditor::resized()
 {
     textEditor.setBounds (getLocalBounds().reduced (2));
@@ -209,18 +219,23 @@ void MidiCCEditor::refreshMappings()
     table.updateContent();
 }
 
-void MidiCCEditor::addMapping (const juce::String& name, juce::Component* comp, MidiCCMapping::ComponentType type)
+void MidiCCEditor::addMapping (const juce::String& name, juce::Component* comp, MidiCCMapping::ComponentType type,
+                               juce::ValueTree valueTree, bool ccEditable)
 {
     MidiCCMapping mapping;
     mapping.componentName = comp != nullptr ? comp->getName() : name;
     mapping.component = comp;
+    mapping.valueTree = valueTree;
     mapping.type = type;
     mapping.midiChannel = 1;
+    mapping.ccEditable = ccEditable;
     mapping.ccNumber = 0;
 
-    if (auto* d = dynamic_cast<CCDial*> (comp)) {
+    // Prefer the authored CC from the ValueTree, falling back to the widget.
+    if (valueTree.isValid() && valueTree.hasProperty (Device::ccNumberID))
+        mapping.ccNumber = valueTree.getProperty (Device::ccNumberID);
+    else if (auto* d = dynamic_cast<CCDial*> (comp))
         mapping.ccNumber = d->controllerNumber();
-    }
 
     mappings.add (mapping);
     table.updateContent();
@@ -285,6 +300,7 @@ juce::Component* MidiCCEditor::refreshComponentForCell (int rowNumber, int colum
 
         editor->setValue (mapping.ccNumber >= 0 ? mapping.ccNumber : 0);
         editor->onValueChanged = [this, rowNumber] (int value) { setCCMapping (rowNumber, value); };
+        editor->setReadOnly (! mapping.ccEditable, mapping.ccEditable ? juce::String() : "PB");
         return editor;
     }
 
@@ -295,9 +311,17 @@ void MidiCCEditor::setCCMapping (int row, int ccNumber)
 {
     if (row >= 0 && row < mappings.size()) {
         auto& ref = mappings.getReference (row);
+        if (! ref.ccEditable)
+            return;
+
         ref.ccNumber = ccNumber;
         if (auto* d = dynamic_cast<CCDial*> (ref.component))
             d->setControllerNumber (ccNumber);
+
+        // The MidiDispatcher generates MIDI from the ValueTree, so the edit must
+        // be written through for it to take effect at runtime.
+        if (ref.valueTree.isValid())
+            ref.valueTree.setProperty (Device::ccNumberID, ccNumber, nullptr);
     }
 }
 
